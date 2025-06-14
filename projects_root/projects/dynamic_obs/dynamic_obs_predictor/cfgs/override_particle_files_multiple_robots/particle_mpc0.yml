@@ -80,14 +80,12 @@ cost:
   # Example of explicit custom cost configuration:
   custom:
     arm_base:
-      dynamic_obs:
-        module_path: "curobo.rollout.cost.custom.arm_base.dynamic_obs_cost"
-        class_name: "DynamicObsCost"
-        config_class_name: "CustomCostConfig"
+      dynamic_obs_cost2: # module name
         weight: 100.0
         terminal: False
         n_coll_spheres_valid: 61 # number of spheres to check for collision
 
+    
 
 
 mppi:

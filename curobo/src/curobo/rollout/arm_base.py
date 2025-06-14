@@ -14,6 +14,7 @@ from dataclasses import dataclass
 import os
 from typing import Dict, List, Optional, Union
 import datetime
+from curobo.rollout.cost.custom.custom_cost import CustomCost
 import matplotlib.pyplot as plt
 
 # Third Party
@@ -62,6 +63,10 @@ class ArmCostConfig:
 
     @staticmethod
     def _get_base_keys():
+        """
+        Returns:
+            Dictionary of base (cost terms of base calss ArmBase) cost keys
+        """
         k_list = {
             "null_space_cfg": DistCostConfig,
             "manipulability_cfg": ManipulabilityCostConfig,
@@ -69,7 +74,13 @@ class ArmCostConfig:
             "self_collision_cfg": SelfCollisionCostConfig,
             "bound_cfg": BoundCostConfig,
         }
-        return k_list
+        prefix_module = CustomCost.get_modules_path_prefix() + 'base' + '.' 
+        modules = importlib.import_module(prefix_module)
+        for module_name in modules: 
+            import module.Cost as Cost
+            import module.CostConfig as CostConfig
+            k_list[module_name] = Cost
+            k_list[module_name + 'Config'] = CostConfig
 
     @staticmethod
     def _load_custom_cost_class(module_path: str, class_name: str):
@@ -163,14 +174,60 @@ class ArmCostConfig:
         return discovered_costs
 
     @staticmethod
-    def _parse_custom_costs(custom_dict: Dict, tensor_args: TensorDeviceType, enable_auto_discovery: bool = False, _num_particles_rollout_full: int = -1) -> Dict:
+    def _parse_custom_costs(custom_dict: Dict, _num_particles_rollout_full: int = -1) -> Dict:
         """Parse custom cost configurations for arm_base or arm_reacher."""
         custom_costs = {}        
-        # Check if there are any explicitly configured custom costs
-        has_explicit_arm_base_costs = "arm_base" in custom_dict and custom_dict["arm_base"]
-        has_explicit_arm_reacher_costs = "arm_reacher" in custom_dict and custom_dict["arm_reacher"]
+        # # Check if there are any explicitly configured custom costs
+        # has_explicit_arm_base_costs = "arm_base" in custom_dict and custom_dict["arm_base"]
+        # has_explicit_arm_reacher_costs = "arm_reacher" in custom_dict and custom_dict["arm_reacher"]
         
-                
+        for type_of_custom_cost in ['base', 'reacher']:
+            type_of_custom_cost_key = f"arm_{type_of_custom_cost}"
+            has_explicit_type_of_custom_cost = type_of_custom_cost_key in custom_dict and custom_dict[type_of_custom_cost_key]
+
+            if has_explicit_type_of_custom_cost:
+                custom_costs[type_of_custom_cost_key] = {}
+                for cost_name, cost_config in custom_dict["arm_base"].items():
+                    if isinstance(cost_config, dict):
+                        # Extract class information (use get() instead of pop() to avoid modifying original dict)
+                        # module_path = cost_config.get("module_path", None)
+                        module_path = CustomCost.get_modules_path_prefix() + type_of_custom_cost + '.' + cost_name
+                        # class_name = cost_config.get("class_name", None)
+                        # config_class_name = cost_config.get("config_class_name", None)
+                         
+                        
+                        if module_path and class_name:
+                            # Create a copy of the config dict without the class info fields
+                            config_params = {k: v for k, v in cost_config.items() 
+                                        if k not in ['module_path', 'class_name', 'config_class_name']}
+                            
+                            # Add the _num_particles_rollout_full parameter to config_params
+                            config_params['_num_particles_rollout_full'] = _num_particles_rollout_full
+                            config_params['_horizon_rollout_full'] = -1  # Default value, should be set elsewhere
+                            
+                            
+                            # Load the custom cost class
+                            cost_class = ArmCostConfig._load_custom_cost_class(module_path, class_name)
+                            if cost_class:
+                                # Load config class if specified
+                                if config_class_name:
+                                    config_class = ArmCostConfig._load_custom_cost_class(module_path, config_class_name)
+                                    if config_class:
+                                        cost_cfg = config_class(**config_params, tensor_args=tensor_args)
+                                    else:
+                                        # Fallback to basic CostConfig
+                                        cost_cfg = CostConfig(**config_params, tensor_args=tensor_args)
+                                else:
+                                    # Use basic CostConfig
+                                    cost_cfg = CostConfig(**config_params, tensor_args=tensor_args)
+                                
+                                custom_costs[type_of_custom_cost_key][cost_name] = {
+                                    "cost_class": cost_class,
+                                    "cost_config": cost_cfg
+                                }
+                    
+
+
         # Process explicitly configured arm_base custom costs
         if has_explicit_arm_base_costs:
             custom_costs["arm_base"] = {}

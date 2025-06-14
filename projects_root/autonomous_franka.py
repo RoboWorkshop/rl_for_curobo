@@ -5,6 +5,9 @@ except ImportError:
 
 from typing import List, Optional
 from curobo.geom.sdf.world_mesh import WorldMeshCollision
+from curobo.rollout.arm_reacher import ArmReacher
+from curobo.rollout.cost.custom import arm_reacher
+from curobo.wrap.wrap_mpc import WrapMpc
 import torch
 from typing import Callable, Dict, Union
 import carb
@@ -612,34 +615,55 @@ class FrankaMpc(AutonomousFranka):
     def get_col_pred(self):
         return self.get_cost_term("dynamic_obs").dynamic_obs_col_pred
 
-    def get_arm_reacher(self):
-        return self.solver.solver.safety_rollout
+    def get_mpc_solver(self) -> MpcSolver:
+        """
+        return the mpc solver object.
+        """
+        return self.solver
+    
+    def get_wrap_mpc(self) -> WrapMpc:
+        """
+        return the wrap mpc object of the solver.
+        """
+        return self.get_mpc_solver().solver
+    
+    def get_rollout_fn(self)-> ArmReacher:
+        """
+        return the rollout function of the solver.
+        """
+        return self.get_wrap_mpc().rollout_fn
+    
+    def get_safety_rollout(self) -> ArmReacher:
+        """
+        return the safety rollout function of the solver.
+        """
+        return self.get_wrap_mpc().safety_rollout
     
     def get_cost_term(self, cost_name:str):
         """
-        Get a cost term from the arm_reacher (which inherits from arm_base).
+        Get a cost term from the  (which inherits from arm_base).
         Args:
             cost_name (str): the name of the cost term to get (e.g. "dynamic_obs", "pose_cost").
         Returns:
             the cost term.
         """
 
-        arm_reacher = self.get_arm_reacher()
-
+        # arm_reacher = self.get_arm_reacher()
+        rollout_fn = self.get_rollout_fn()
         # first, search over original cost terms     
-        for attr_name in arm_reacher.__dict__: # going over all attributes of the arm_reacher
-            if hasattr(arm_reacher, cost_name):
-                return getattr(arm_reacher, cost_name)
+        for attr_name in rollout_fn.__dict__: # going over all attributes of the arm_reacher
+            if hasattr(rollout_fn, cost_name):
+                return getattr(rollout_fn, cost_name)
 
         # if not found, search over custom cost terms
         custom_cost_attrs = ['_custom_arm_base_costs', '_custom_arm_reacher_costs']
         for attr_name in custom_cost_attrs:
-            if hasattr(arm_reacher, attr_name):
-                custom_costs = getattr(arm_reacher, attr_name)
+            if hasattr(rollout_fn, attr_name):
+                custom_costs = getattr(rollout_fn, attr_name)
                 if cost_name in custom_costs:
                     return custom_costs[cost_name]
 
-        raise ValueError(f"Cost term '{cost_name}' not found in arm_reacher or custom cost terms.")
+        raise ValueError(f"Cost term '{cost_name}' not found in rollout_fn or its custom cost terms.")
     
     def get_plan(self, include_task_space:bool=True, n_steps:int=-1 ,valid_spheres_only = True):
         """

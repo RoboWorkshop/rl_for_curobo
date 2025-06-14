@@ -15,6 +15,7 @@ import os
 from typing import Any, Dict, List, Optional, Union
 
 # Third Party
+from curobo.rollout.cost.custom.custom_cost import CustomCost
 import torch
 import torch.autograd.profiler as profiler
 import matplotlib.pyplot as plt
@@ -147,12 +148,17 @@ class ArmReacherCostConfig(ArmCostConfig):
         
         # Handle custom costs with auto-discovery (inherited from ArmCostConfig)
         custom_dict = data_dict.get("custom", {})
+        
+        
         data["custom_cfg"] = ArmCostConfig._parse_custom_costs(
             custom_dict, 
             tensor_args, 
             enable_auto_discovery=enable_auto_discovery,
             _num_particles_rollout_full=_num_particles_rollout_full,
         )
+        
+        # CustomCost.parse_cfg_from_file(custom_dict) 
+        
         
         return ArmReacherCostConfig(**data)
 
@@ -402,19 +408,20 @@ class ArmReacher(ArmBase, ArmReacherConfig):
         if (hasattr(self.cost_cfg, 'custom_cfg') and 
             self.cost_cfg.custom_cfg is not None and 
             "arm_reacher" in self.cost_cfg.custom_cfg):
-            for cost_name, cost_info in self.cost_cfg.custom_cfg["arm_reacher"].items():
-                try:
-                    
-                    cost_class = cost_info["cost_class"]
-                    cost_config = cost_info["cost_config"]
-                    cost_config._horizon_rollout_full = self.horizon
-                    cost_config._num_particles_rollout_full = self._num_particles_rollout_full
-                    cost_instance = cost_class(cost_config)
-                    self._custom_arm_reacher_costs[cost_name] = cost_instance
-                    log_info(f"Initialized custom arm_reacher cost: {cost_name}")
-                except Exception as e:
-                    log_error(f"Failed to initialize custom arm_reacher cost {cost_name}: {e}")
-
+            modules_path_prefix = CustomCost.get_modules_path_prefix() + 'arm_reacher' + '.'
+            
+            # # go over all the custom cost terms
+            # for cost_module_name, cost_info in self.cost_cfg.custom_cfg["arm_reacher"].items():
+            #     module_path = modules_path_prefix + cost_module_name
+            #     # cost_class = cost_info["cost_class"]
+            #     # cost_config = cost_info["cost_config"]
+            #     cost_class = 'Cost'
+            #     cost_config = 'Cfg'
+            #     cost_config._horizon_rollout_full = self.horizon
+            #     cost_config._num_particles_rollout_full = self._num_particles_rollout_full
+            #     cost_instance = cost_class(cost_config)
+            #     self._custom_arm_reacher_costs[cost_module_name] = cost_instance
+                
     def cost_fn(self, state: KinematicModelState, action_batch=None):
         """
         Compute cost given that state dictionary and actions
@@ -861,18 +868,6 @@ class ArmReacher(ArmBase, ArmReacherConfig):
         if self._plot_counter % self._plot_every_k != 0:
             return  # Skip this iteration
         
-        # Debug: Print cost information on first few iterations
-        if self._plot_counter <= self._plot_every_k * 3:  # First 3 plot updates
-            print(f"\n=== Iteration {self._plot_counter} Cost Debug ===")
-            print(f"Total cost components: {len(cost_list)}")
-            for i, cost_tensor in enumerate(cost_list):
-                if cost_tensor is not None:
-                    cost_mean = torch.mean(cost_tensor).cpu().numpy().item()
-                    cost_max = torch.max(cost_tensor).cpu().numpy().item()
-                    cost_min = torch.min(cost_tensor).cpu().numpy().item()
-                    print(f"Cost {i}: mean={cost_mean:.6f}, min={cost_min:.6f}, max={cost_max:.6f}, shape={cost_tensor.shape}")
-                else:
-                    print(f"Cost {i}: None")
         
         # Dynamic cost labeling based on what's actually enabled
         cost_labels_dynamic = []
@@ -981,11 +976,11 @@ class ArmReacher(ArmBase, ArmReacherConfig):
                 self._cost_histories[label].append(cost_mean)
         
         # Print active costs for debugging (first few times)
-        if self._plot_counter <= self._plot_every_k * 2:  # First 2 plot updates
-            print(f"Active cost components: {[(label, f'{val:.6f}') for label, val, _ in active_costs]}")
-            custom_costs = [label for label, _, _ in active_costs if 'Custom' in label]
-            if custom_costs:
-                print(f"Custom costs detected: {custom_costs}")
+        # if self._plot_counter <= self._plot_every_k * 2:  # First 2 plot updates
+        #     print(f"Active cost components: {[(label, f'{val:.6f}') for label, val, _ in active_costs]}")
+        #     custom_costs = [label for label, _, _ in active_costs if 'Custom' in label]
+        #     if custom_costs:
+        #         print(f"Custom costs detected: {custom_costs}")
             # Only show custom costs debug info, not all goal/pose costs
         
         # Update all plot lines
