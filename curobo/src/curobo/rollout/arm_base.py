@@ -165,38 +165,22 @@ class ArmCostConfig:
     @staticmethod
     def _parse_custom_costs(custom_dict: Dict, tensor_args: TensorDeviceType, enable_auto_discovery: bool = False, _num_particles_rollout_full: int = -1) -> Dict:
         """Parse custom cost configurations for arm_base or arm_reacher."""
-        custom_costs = {}
-        
-        print(f"[DEBUG] _parse_custom_costs called with custom_dict: {custom_dict}")
-        print(f"[DEBUG] enable_auto_discovery: {enable_auto_discovery}")
-        print(f"[DEBUG] _num_particles_rollout_full: {_num_particles_rollout_full}")
-        
+        custom_costs = {}        
         # Check if there are any explicitly configured custom costs
         has_explicit_arm_base_costs = "arm_base" in custom_dict and custom_dict["arm_base"]
         has_explicit_arm_reacher_costs = "arm_reacher" in custom_dict and custom_dict["arm_reacher"]
         
-        print(f"[DEBUG] arm_base in custom_dict: {'arm_base' in custom_dict}")
-        if "arm_base" in custom_dict:
-            print(f"[DEBUG] custom_dict['arm_base']: {custom_dict['arm_base']}")
-            print(f"[DEBUG] type of custom_dict['arm_base']: {type(custom_dict['arm_base'])}")
-            print(f"[DEBUG] bool(custom_dict['arm_base']): {bool(custom_dict['arm_base'])}")
-        
-        print(f"[DEBUG] has_explicit_arm_base_costs: {has_explicit_arm_base_costs}")
-        print(f"[DEBUG] has_explicit_arm_reacher_costs: {has_explicit_arm_reacher_costs}")
-        
+                
         # Process explicitly configured arm_base custom costs
         if has_explicit_arm_base_costs:
-            print(f"[DEBUG] Processing explicit arm_base costs...")
             custom_costs["arm_base"] = {}
             for cost_name, cost_config in custom_dict["arm_base"].items():
-                print(f"[DEBUG] Processing cost: {cost_name} with config: {cost_config}")
                 if isinstance(cost_config, dict):
                     # Extract class information (use get() instead of pop() to avoid modifying original dict)
                     module_path = cost_config.get("module_path", None)
                     class_name = cost_config.get("class_name", None)
                     config_class_name = cost_config.get("config_class_name", None)
                     
-                    print(f"[DEBUG] module_path: {module_path}, class_name: {class_name}, config_class_name: {config_class_name}")
                     
                     if module_path and class_name:
                         # Create a copy of the config dict without the class info fields
@@ -207,7 +191,6 @@ class ArmCostConfig:
                         config_params['_num_particles_rollout_full'] = _num_particles_rollout_full
                         config_params['_horizon_rollout_full'] = -1  # Default value, should be set elsewhere
                         
-                        print(f"[DEBUG] config_params with particles: {config_params}")
                         
                         # Load the custom cost class
                         cost_class = ArmCostConfig._load_custom_cost_class(module_path, class_name)
@@ -228,13 +211,10 @@ class ArmCostConfig:
                                 "cost_class": cost_class,
                                 "cost_config": cost_cfg
                             }
-                            print(f"[DEBUG] Successfully added custom cost: {cost_name}")
-        else:
-            print(f"[DEBUG] No explicit arm_base costs to process")
+
         
         # Auto-discover arm_base costs only if enabled AND no explicit arm_base costs are configured
         if enable_auto_discovery and not has_explicit_arm_base_costs:
-            print(f"[DEBUG] Auto-discovery enabled and no explicit arm_base costs, discovering...")
             if "arm_base" not in custom_costs:
                 custom_costs["arm_base"] = {}
             discovered_arm_base = ArmCostConfig._discover_custom_costs_in_directory("arm_base", tensor_args)
@@ -292,7 +272,6 @@ class ArmCostConfig:
                 if cost_name not in custom_costs["arm_reacher"]:
                     custom_costs["arm_reacher"][cost_name] = cost_info
         
-        print(f"[DEBUG] Final custom_costs: {custom_costs}")
         return custom_costs
 
     @staticmethod

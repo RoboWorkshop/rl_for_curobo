@@ -456,25 +456,17 @@ class FrankaMpc(AutonomousFranka):
         self.articulation_controller = self.robot.get_articulation_controller()
         self._cmd_state_full = None
         self.override_particle_file = override_particle_file # New. settings in the file will overide the default settings in the default particle_mpc.yml file. For example, num of optimization steps per time step.
-        
-        # Debug the YAML loading issue
-        print(f"[DEBUG] override_particle_file: {self.override_particle_file}")
-        if self.override_particle_file:
-            import os
-            print(f"[DEBUG] File exists: {os.path.exists(self.override_particle_file)}")
-            if os.path.exists(self.override_particle_file):
-                print(f"[DEBUG] File size: {os.path.getsize(self.override_particle_file)} bytes")
-        
-        self.cfg = load_yaml(self.override_particle_file)
-        print(f"[DEBUG] load_yaml result: {self.cfg}")
-        print(f"[DEBUG] cfg type: {type(self.cfg)}")
-        
-        if self.cfg is None:
-            raise ValueError(f"Failed to load YAML file: {self.override_particle_file}")
-            
-        self.H = self.cfg["model"]["horizon"]
-        self.num_particles = self.cfg["mppi"]["num_particles"]
         self.cost_live_plotting_cfg = cost_live_plotting_cfg
+        
+
+        
+        # self.cfg = load_yaml(self.override_particle_file)
+        # if self.cfg is None:
+        #     raise ValueError(f"Failed to load YAML file: {self.override_particle_file}")
+            
+        self.H = load_yaml(self.override_particle_file)["model"]["horizon"]
+        self.num_particles = load_yaml(self.override_particle_file)["mppi"]["num_particles"]
+
         
   
 
@@ -631,108 +623,23 @@ class FrankaMpc(AutonomousFranka):
         Returns:
             the cost term.
         """
+
         arm_reacher = self.get_arm_reacher()
-        
-        print(f"[DEBUG] Looking for cost: '{cost_name}'")
-        print(f"[DEBUG] ArmReacher type: {type(arm_reacher).__name__}")
-        print(f"[DEBUG] ArmReacher MRO: {[cls.__name__ for cls in type(arm_reacher).__mro__]}")
-        
-        # Check all possible custom cost storage locations
+
+        # first, search over original cost terms     
+        for attr_name in arm_reacher.__dict__: # going over all attributes of the arm_reacher
+            if hasattr(arm_reacher, cost_name):
+                return getattr(arm_reacher, cost_name)
+
+        # if not found, search over custom cost terms
         custom_cost_attrs = ['_custom_arm_base_costs', '_custom_arm_reacher_costs']
         for attr_name in custom_cost_attrs:
             if hasattr(arm_reacher, attr_name):
                 custom_costs = getattr(arm_reacher, attr_name)
-                print(f"[DEBUG] {attr_name} exists: {list(custom_costs.keys()) if custom_costs else 'empty/None'}")
-                if custom_costs:
-                    for k, v in custom_costs.items():
-                        print(f"[DEBUG]   {k}: {type(v).__name__}, enabled={getattr(v, 'enabled', 'no_enabled_attr')}")
-            else:
-                print(f"[DEBUG] {attr_name} does not exist")
-        
-        # Check if cost_cfg has custom_cfg
-        if hasattr(arm_reacher, 'cost_cfg') and hasattr(arm_reacher.cost_cfg, 'custom_cfg'):
-            custom_cfg = arm_reacher.cost_cfg.custom_cfg
-            print(f"[DEBUG] cost_cfg.custom_cfg exists: {custom_cfg is not None}")
-            if custom_cfg:
-                print(f"[DEBUG] cost_cfg.custom_cfg keys: {list(custom_cfg.keys())}")
-                for section, costs in custom_cfg.items():
-                    print(f"[DEBUG]   {section}: {list(costs.keys()) if isinstance(costs, dict) else type(costs).__name__}")
-        
-        # First try to get standard cost terms as attributes
-        if hasattr(arm_reacher, cost_name):
-            attr_value = getattr(arm_reacher, cost_name)
-            if hasattr(attr_value, 'enabled') and attr_value.enabled:
-                print(f"[DEBUG] Found '{cost_name}' as direct attribute (enabled)")
-                return attr_value
-            else:
-                print(f"[DEBUG] Found '{cost_name}' as direct attribute but not enabled or no enabled attr")
-        
-        # Try custom costs using the inherited get_custom_cost method
-        if hasattr(arm_reacher, 'get_custom_cost'):
-            print(f"[DEBUG] Trying get_custom_cost method")
-            custom_cost = arm_reacher.get_custom_cost(cost_name)
-            if custom_cost is not None:
-                print(f"[DEBUG] Found '{cost_name}' via get_custom_cost: {type(custom_cost).__name__}")
-                return custom_cost
-            else:
-                print(f"[DEBUG] get_custom_cost returned None for '{cost_name}'")
-        
-        # Try direct lookup in all custom cost dictionaries
-        for attr_name in custom_cost_attrs:
-            if hasattr(arm_reacher, attr_name):
-                custom_costs = getattr(arm_reacher, attr_name)
-                if custom_costs and cost_name in custom_costs:
-                    print(f"[DEBUG] Found '{cost_name}' in {attr_name} directly")
+                if cost_name in custom_costs:
                     return custom_costs[cost_name]
-        
-        # Try to find by class name matching in all custom cost dictionaries
-        for attr_name in custom_cost_attrs:
-            if hasattr(arm_reacher, attr_name):
-                custom_costs = getattr(arm_reacher, attr_name)
-                if custom_costs:
-                    for cost_key, cost_instance in custom_costs.items():
-                        class_name = cost_instance.__class__.__name__
-                        print(f"[DEBUG] Checking {attr_name}['{cost_key}'] class_name='{class_name}' against '{cost_name}'")
-                        
-                        # Try various matching strategies
-                        if (cost_name == cost_key or 
-                            cost_name == class_name or
-                            cost_name.lower() == cost_key.lower() or
-                            cost_name.lower() == class_name.lower()):
-                            print(f"[DEBUG] Found match for '{cost_name}' -> '{cost_key}' ({class_name}) in {attr_name}")
-                            return cost_instance
-        
-        # Try to access custom costs from cost_cfg.custom_cfg directly
-        if hasattr(arm_reacher, 'cost_cfg') and hasattr(arm_reacher.cost_cfg, 'custom_cfg'):
-            custom_cfg = arm_reacher.cost_cfg.custom_cfg
-            if custom_cfg:
-                for section_name in ['arm_base', 'arm_reacher']:
-                    if section_name in custom_cfg:
-                        section_costs = custom_cfg[section_name]
-                        print(f"[DEBUG] Checking cost_cfg.custom_cfg['{section_name}'] for '{cost_name}'")
-                        if cost_name in section_costs:
-                            cost_info = section_costs[cost_name]
-                            print(f"[DEBUG] Found '{cost_name}' in cost_cfg.custom_cfg['{section_name}']")
-                            if isinstance(cost_info, dict) and 'cost_class' in cost_info and 'cost_config' in cost_info:
-                                # Try to instantiate the cost if it's not already instantiated
-                                cost_class = cost_info['cost_class']
-                                cost_config = cost_info['cost_config']
-                                cost_instance = cost_class(cost_config)
-                                print(f"[DEBUG] Instantiated '{cost_name}' from cost_cfg: {type(cost_instance).__name__}")
-                                return cost_instance
-                            else:
-                                print(f"[DEBUG] cost_cfg entry for '{cost_name}' is not in expected format: {type(cost_info)}")
-        
-        # Build comprehensive error message
-        available_attrs = [attr for attr in dir(arm_reacher) if not attr.startswith('_') and hasattr(getattr(arm_reacher, attr, None), 'enabled')]
-        custom_cost_info = arm_reacher.list_custom_costs() if hasattr(arm_reacher, 'list_custom_costs') else {}
-        
-        error_msg = f"Cost term '{cost_name}' not found in arm_reacher or arm_base. "
-        error_msg += f"Available arm_reacher custom costs: {list(custom_cost_info.keys())}. "
-        error_msg += f"Class names: {[info.get('class_name', 'unknown') for info in custom_cost_info.values()]}. "
-        error_msg += f"Available cost attributes: {available_attrs}"
-        
-        raise ValueError(error_msg)
+
+        raise ValueError(f"Cost term '{cost_name}' not found in arm_reacher or custom cost terms.")
     
     def get_plan(self, include_task_space:bool=True, n_steps:int=-1 ,valid_spheres_only = True):
         """
