@@ -1,6 +1,6 @@
 base: [projects_root/experiments/benchmarks/cfgs/meta_cfg_arms.yml]
 # alg: [SD, CC, O, SC, D, O-]
-alg: [SC, SD, CC, O-] #[O] # [SC, SD, CC, O-] # [O, SC, SD, CC, O-]
+alg: [O,SC, SD, CC, O-] #[O] # [SC, SD, CC, O-] # [O, SC, SD, CC, O-]
 robot_fam: ['ur5e'] #  #[ ur5e]
 robot_type: ['4_05'] # ['4_05'] # ['2_05b'] # ['2_05'] # ['2_05', '4_04']
 task_seed: [0,1,2,3,4] # [0,1,2]
