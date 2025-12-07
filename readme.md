@@ -1,4 +1,4 @@
-# MR-STORM (Multi-Robot STORM) Official Repository 
+# MR-STORM - A Multi-Robot (MR) version for the Stochastic Tensor Optimization Robot Motion framework (STORM)- Official Repository  
 
 <img width="1351" height="334" alt="image" src="https://github.com/user-attachments/assets/296e01e6-7869-45dd-bd94-4688dae235bc" />
 
