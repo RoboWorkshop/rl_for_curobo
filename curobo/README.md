@@ -42,13 +42,6 @@ cuRobo performs trajectory optimization across many seeds in parallel to find a 
 </p>
 
 
-## Demo video
-
-Click the image to watch the demo on YouTube:
-
-[![cuRobo demo](https://img.youtube.com/vi/txZJe9PxYc4/0.jpg)](https://youtu.be/txZJe9PxYc4)
-
-
 ## Citation
 
 If you found this work useful, please cite the below report,
@@ -65,8 +58,3 @@ If you found this work useful, please cite the below report,
       primaryClass={cs.RO}
 }
 ```
-
-
-## License
-
-This repository includes third-party components with their own licenses (see the various LICENSE files under the repository). The code in this curobo/ subdirectory is made available under the Research Use License (RUL) 1.0 — see `LICENSE_RESEARCH` for details (added to the repository root of the curobo/ package). This RUL permits non-commercial academic and scientific research and educational use only. For commercial licensing, please contact the repository maintainers.
