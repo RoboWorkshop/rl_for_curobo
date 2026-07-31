@@ -27,19 +27,26 @@ For business inquiries of this python library, please visit our website and subm
 
 ## Overview
 
-cuRobo is a CUDA accelerated library containing a suite of robotics algorithms that run significantly faster than existing implementations leveraging parallel compute. cuRobo currently provides the following algorithms: (1) forward and inverse kinematics,
-(2) collision checking between robot and world, with the world represented as Cuboids, Meshes, and Depth images, (3) numerical optimization with gradient descent, L-BFGS, and MPPI, (4) geometric planning, (5) trajectory optimization, (6) motion generation that combines inverse kinematics, geometric planning, and trajectory optimization to generate global motions within 30ms.
+cuRobo is a CUDA accelerated library containing a suite of robotics algorithms that run significantly faster than existing implementations leveraging parallel compute. cuRobo currently provides th[...]
+(2) collision checking between robot and world, with the world represented as Cuboids, Meshes, and Depth images, (3) numerical optimization with gradient descent, L-BFGS, and MPPI, (4) geometric p[...]
 
 <p align="center">
 <img width="500" src="images/robot_demo.gif">
 </p>
 
 
-cuRobo performs trajectory optimization across many seeds in parallel to find a solution. cuRobo's trajectory optimization penalizes jerk and accelerations, encouraging smoother and shorter trajectories. Below we compare cuRobo's motion generation on the left to a BiRRT planner for the motion planning phases in a pick and place task.
+cuRobo performs trajectory optimization across many seeds in parallel to find a solution. cuRobo's trajectory optimization penalizes jerk and accelerations, encouraging smoother and shorter trajec[...]
 
 <p align="center">
 <img width="500" src="images/rrt_compare.gif">
 </p>
+
+
+## Demo video
+
+Click the image to watch the demo on YouTube:
+
+[![cuRobo demo](https://img.youtube.com/vi/txZJe9PxYc4/0.jpg)](https://youtu.be/txZJe9PxYc4)
 
 
 ## Citation
@@ -58,3 +65,8 @@ If you found this work useful, please cite the below report,
       primaryClass={cs.RO}
 }
 ```
+
+
+## License
+
+This repository includes third-party components with their own licenses (see the various LICENSE files under the repository). The code in this curobo/ subdirectory is made available under the Research Use License (RUL) 1.0 — see `LICENSE_RESEARCH` for details (added to the repository root of the curobo/ package). This RUL permits non-commercial academic and scientific research and educational use only. For commercial licensing, please contact the repository maintainers.
