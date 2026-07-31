@@ -34,6 +34,12 @@ cuRobo is a CUDA accelerated library containing a suite of robotics algorithms t
 <img width="500" src="images/robot_demo.gif">
 </p>
 
+<p align="center">
+  <a href="https://youtu.be/txZJe9PxYc4?si=W3Fs-bl1dEBl09ip">
+    <img width="500" src="https://img.youtube.com/vi/txZJe9PxYc4/hqdefault.jpg" alt="cuRobo demo video">
+  </a>
+</p>
+
 
 cuRobo performs trajectory optimization across many seeds in parallel to find a solution. cuRobo's trajectory optimization penalizes jerk and accelerations, encouraging smoother and shorter trajec[...]
 
