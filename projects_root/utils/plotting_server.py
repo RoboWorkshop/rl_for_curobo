@@ -13,8 +13,8 @@ from multiprocessing import Queue, Process, Event
 import traceback
 import os
 
-# Add the curobo path
-sys.path.append('/home/dan/rl_for_curobo/curobo/src')
+# Add the curobo path dynamically relative to repository root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'curobo', 'src')))
 
 def plotting_server_process(data_queue, shutdown_event, max_agents: int = 4):
     """

@@ -1,6 +1,0 @@
-source;share/isaac_moveit_main/hook/pythonpath.ps1
-source;share/isaac_moveit_main/hook/pythonpath.dsv
-source;share/isaac_moveit_main/hook/pythonpath.sh
-source;share/isaac_moveit_main/hook/ament_prefix_path.ps1
-source;share/isaac_moveit_main/hook/ament_prefix_path.dsv
-source;share/isaac_moveit_main/hook/ament_prefix_path.sh

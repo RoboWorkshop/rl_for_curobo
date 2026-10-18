@@ -1,8 +1,0 @@
-source;share/franka_panda_moveit_cfg/hook/cmake_prefix_path.ps1
-source;share/franka_panda_moveit_cfg/hook/cmake_prefix_path.dsv
-source;share/franka_panda_moveit_cfg/hook/cmake_prefix_path.sh
-source;share/franka_panda_moveit_cfg/local_setup.bash
-source;share/franka_panda_moveit_cfg/local_setup.dsv
-source;share/franka_panda_moveit_cfg/local_setup.ps1
-source;share/franka_panda_moveit_cfg/local_setup.sh
-source;share/franka_panda_moveit_cfg/local_setup.zsh

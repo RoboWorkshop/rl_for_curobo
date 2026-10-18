@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+message: "If you use MR-STORM in your research or software, please cite our IEEE/RSJ IROS 2026 paper."
+title: "MR-STORM: Scalable Multi-Arm Control By Distributed MPC"
+type: software
+authors:
+  - family-names: "Evron"
+    given-names: "Dan"
+    email: "evrond@post.bgu.ac.il"
+    affiliation: "Foundations of AI Institute, Ben-Gurion University of the Negev"
+  - family-names: "Goldsztejn"
+    given-names: "Elias"
+    email: "eliasgol@post.bgu.ac.il"
+    affiliation: "Foundations of AI Institute, Ben-Gurion University of the Negev"
+  - family-names: "Suissa"
+    given-names: "Dan R."
+    email: "danrouve@post.bgu.ac.il"
+    affiliation: "Foundations of AI Institute, Ben-Gurion University of the Negev"
+  - family-names: "Brafman"
+    given-names: "Ronen I."
+    email: "brafman@bgu.ac.il"
+    affiliation: "Foundations of AI Institute, Ben-Gurion University of the Negev"
+repository-code: "https://github.com/RoboWorkshop/rl_for_curobo"
+url: "https://roboworkshop.github.io/multi-robot-mpc/"
+keywords:
+  - multi-robot systems
+  - multi-arm manipulation
+  - model predictive control
+  - MPPI
+  - STORM
+  - CuRobo
+  - motion planning
+  - collision avoidance
+  - ROS 2
+  - Gazebo
+  - Isaac Sim
+preferred-citation:
+  type: conference-paper
+  title: "MR-STORM: Scalable Multi-Arm Control By Distributed MPC"
+  authors:
+    - family-names: "Evron"
+      given-names: "Dan"
+    - family-names: "Goldsztejn"
+      given-names: "Elias"
+    - family-names: "Suissa"
+      given-names: "Dan R."
+    - family-names: "Brafman"
+      given-names: "Ronen I."
+  collection-title: "IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  year: 2026
+  url: "https://arxiv.org/abs/2602.10114"

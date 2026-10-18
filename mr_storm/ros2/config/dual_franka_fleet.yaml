@@ -1,0 +1,11 @@
+# 2-Arm Franka Emika Panda Distributed Fleet Configuration
+robot_yml: "franka.yml"
+particle_yml: "projects_root/experiments/benchmarks/cfgs/particle/O.yml"
+
+arms:
+  - robot_id: 0
+    namespace: "arm_0"
+    base_pose: [0.0, -0.30, 0.0, 1.0, 0.0, 0.0, 0.0]
+  - robot_id: 1
+    namespace: "arm_1"
+    base_pose: [0.0, 0.30, 0.0, 1.0, 0.0, 0.0, 0.0]

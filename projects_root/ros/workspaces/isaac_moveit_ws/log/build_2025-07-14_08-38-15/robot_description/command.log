@@ -1,1 +1,0 @@
-Invoking command in '/workspace/rl_for_curobo/projects_root/ros/workspaces/isaac_moveit_ws/build/robot_description': /usr/local/bin/cmake --build /workspace/rl_for_curobo/projects_root/ros/workspaces/isaac_moveit_ws/build/robot_description -- -j16 -l16

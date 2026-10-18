@@ -1,8 +1,8 @@
 #!/bin/bash
 # Setup script for Isaac Sim environment variables in existing conda environment
 
-# Set the Isaac Sim installation path
-export ISAAC_SIM_PATH="/home/dan/isaacsim"
+# Set the Isaac Sim installation path (override by exporting ISAAC_SIM_PATH before sourcing)
+export ISAAC_SIM_PATH="${ISAAC_SIM_PATH:-$HOME/isaacsim}"
 
 # Isaac Sim environment variables
 export CARB_APP_PATH=$ISAAC_SIM_PATH/kit

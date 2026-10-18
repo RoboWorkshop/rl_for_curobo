@@ -1,0 +1,71 @@
+name: MR-STORM CI
+
+on:
+  push:
+    branches: [main, main_new]
+  pull_request:
+    branches: [main, main_new]
+
+jobs:
+  syntax-and-unit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install lightweight dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pyyaml scipy
+
+      - name: Verify Python syntax across mr_storm and examples
+        run: |
+          python -m py_compile mr_storm/__init__.py
+          python -m py_compile mr_storm/core/*.py
+          python -m py_compile mr_storm/backends/*.py
+          python -m py_compile mr_storm/ros2/*.py
+          python -m py_compile examples/*.py
+
+      - name: Run MR-STORM core serialization, safety supervisor, and Gazebo config unit tests
+        run: |
+          python -c "
+          import numpy as np
+          from mr_storm.core.types import BroadcastPlanPacket, JointCommand, RobotJointState
+          from mr_storm.backends.real_robot_backend import SafetyLimits, SafetySupervisor
+          from mr_storm.backends.gazebo_backend import generate_gazebo_ros2_control_yaml
+
+          # Test binary serialization of BroadcastPlanPacket
+          pkt = BroadcastPlanPacket(
+              robot_id=1,
+              timestamp=12345.67,
+              horizon=30,
+              n_spheres=52,
+              sphere_positions=np.random.randn(30, 52, 3).astype(np.float32),
+              sphere_radii=np.full(52, 0.05, dtype=np.float32),
+              pos_error=0.12,
+              rot_error=5.4,
+          )
+          raw = pkt.to_bytes()
+          restored = BroadcastPlanPacket.from_bytes(raw)
+          assert restored.robot_id == 1 and restored.horizon == 30 and restored.n_spheres == 52
+          assert np.allclose(pkt.sphere_positions, restored.sphere_positions)
+
+          # Test SafetySupervisor step clamping
+          sup = SafetySupervisor(SafetyLimits(max_step_rad=0.05, ema_smoothing_alpha=1.0))
+          cur = RobotJointState(positions=np.zeros(6), velocities=np.zeros(6))
+          cmd = JointCommand(positions=np.ones(6), velocities=np.zeros(6), accelerations=np.zeros(6), joint_names=['j']*6)
+          safe = sup.filter_command(cur, cmd)
+          assert np.allclose(safe.positions, 0.05)
+
+          # Test Gazebo YAML generation
+          yml = generate_gazebo_ros2_control_yaml({0: ['j1', 'j2']})
+          assert 'arm_0_trajectory_controller' in yml
+          print('All MR-STORM CI checks passed!')
+          "

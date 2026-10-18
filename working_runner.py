@@ -8,7 +8,7 @@ import os
 # Set command line args
 sys.argv = [
     'dataset_collector.py',
-    '--combo_cfg_path', '/home/evrond/sbatch_files/combo/combo_cfg.yml',
+    '--combo_cfg_path', os.environ.get('MR_STORM_COMBO_CFG', 'projects_root/experiments/benchmarks/cfgs/combo_cfg.yml'),
     '--ignore_sim_errors',
     '--cluster',
     '--vis_mode', 'headless',

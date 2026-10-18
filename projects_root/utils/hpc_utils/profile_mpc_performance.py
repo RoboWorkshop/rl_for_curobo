@@ -12,9 +12,10 @@ from typing import Dict, Any
 import zmq
 import torch
 
-# Add the project root to Python path
-sys.path.append('/home/dan/rl_for_curobo/projects_root')
-sys.path.append('/home/dan/rl_for_curobo/curobo/src')
+import os
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+sys.path.append(os.path.join(_REPO_ROOT, 'projects_root'))
+sys.path.append(os.path.join(_REPO_ROOT, 'curobo', 'src'))
 
 from curobo.types.state import JointState
 from curobo.types.base import TensorDeviceType

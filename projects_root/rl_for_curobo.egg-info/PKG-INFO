@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: rl_for_curobo
-Version: 0.1.0
-Requires-Python: >=3.7
-Requires-Dist: numpy
-Requires-Dist: torch
-Requires-Dist: curobo
-Dynamic: requires-dist
-Dynamic: requires-python

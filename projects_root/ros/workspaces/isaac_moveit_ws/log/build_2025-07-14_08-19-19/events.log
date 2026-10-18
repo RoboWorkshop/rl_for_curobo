@@ -1,4 +1,0 @@
-[0.000000] (-) TimerEvent: {}
-[0.005720] (-) JobUnselected: {'identifier': 'isaac_moveit_main'}
-[0.005850] (-) JobUnselected: {'identifier': 'robot_description'}
-[0.006069] (-) EventReactorShutdown: {}

@@ -1,4 +1,0 @@
-rich
-numpy==1.26.0
-scipy==1.15.3
-tqdm
