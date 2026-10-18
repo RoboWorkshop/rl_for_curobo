@@ -25,10 +25,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy pyyaml scipy
 
-      - name: Verify Python syntax across mr_storm and examples
+      - name: Verify Python syntax across main.py, mr_storm, and examples
         run: |
+          python -m py_compile main.py
           python -m py_compile mr_storm/__init__.py
           python -m py_compile mr_storm/core/*.py
+          python -m py_compile mr_storm/comm/*.py
           python -m py_compile mr_storm/backends/*.py
           python -m py_compile mr_storm/ros2/*.py
           python -m py_compile examples/*.py

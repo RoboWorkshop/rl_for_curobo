@@ -3,8 +3,8 @@
 [![IEEE/RSJ IROS 2026](https://img.shields.io/badge/IEEE%2FRSJ-IROS%202026-00629B.svg)](https://roboworkshop.github.io/multi-robot-mpc/)
 [![arXiv](https://img.shields.io/badge/arXiv-2602.10114-b31b1b.svg)](https://arxiv.org/abs/2602.10114)
 [![Project Page](https://img.shields.io/badge/Project-Website-2ea44f.svg)](https://roboworkshop.github.io/multi-robot-mpc/)
-[![Simulators](https://img.shields.io/badge/Simulators-Isaac%20Sim%20%7C%20Gazebo%20%7C%20MuJoCo-orange.svg)](#multi-simulator--real-hardware-quickstart)
-[![ROS 2](https://img.shields.io/badge/ROS%202-Distributed%20Multi--Arm-22314E.svg)](#3-distributed-multi-arm-with-ros-2)
+[![Simulators](https://img.shields.io/badge/Simulators-Isaac%20Sim%20%7C%20Gazebo%20%7C%20Kinematic-orange.svg)](#unified-entry-point-mainpy--agnostic-layer)
+[![ROS](https://img.shields.io/badge/ROS-Sync%20%26%20Async%20Decentralized-22314E.svg)](#execution-modes-synchronous-decentralized-vs-asynchronous-decentralized)
 
 <p align="center">
   <img width="100%" alt="MR-STORM Banner" src="https://github.com/user-attachments/assets/296e01e6-7869-45dd-bd94-4688dae235bc" />
@@ -13,8 +13,7 @@
 > **Official Repository for the IEEE/RSJ IROS 2026 Paper:**  
 > **[MR-STORM: Scalable Multi-Arm Control By Distributed MPC](https://arxiv.org/abs/2602.10114)**  
 > [Dan Evron](mailto:evrond@post.bgu.ac.il), [Elias Goldsztejn](mailto:eliasgol@post.bgu.ac.il), [Dan R. Suissa](mailto:danrouve@post.bgu.ac.il), and [Ronen I. Brafman](mailto:brafman@bgu.ac.il)  
-> *Foundations of AI Institute, Stein Faculty of Computer and Information Science, Ben-Gurion University of the Negev*  
-> *(Note: `rl_for_curobo` is the legacy GitHub repository URL slug; the Python package provides the `mr_storm` API directly.)*
+> *Foundations of AI Institute, Stein Faculty of Computer and Information Science, Ben-Gurion University of the Negev*
 
 ---
 
@@ -24,37 +23,102 @@ Centralized motion planning algorithms struggle to scale in multi-arm manipulati
 
 **MR-STORM** is a decentralized, GPU-accelerated Model Predictive Path Integral (MPPI) framework building on [STORM](https://arxiv.org/abs/2104.13542) and [CuRobo](https://curobo.org/) that controls multiple robotic arms in real time (30–100+ Hz):
 
-1. **Decentralized & Scalable:** Each robotic arm runs its own local GPU MPPI trajectory optimizer, scaling linearly in per-agent computation to 4+ high-DoF manipulators in tight workspaces.
-2. **Horizon Plan-Sharing:** At every control cycle, each arm integrates its MPPI mean acceleration policy over the horizon $H$ and broadcasts its predicted task-space collision spheres $\{(p_{t,s}, r_s)\}_{t=1..H}$ in the shared world frame.
-3. **Dynamic Priority Conflict Resolution ($\tau$):** To prevent livelocks and deadlocks in symmetric bottlenecks, each arm weights inter-arm collision costs by relative goal proximity:
+1. **Decentralized & Scalable:** Each robotic arm runs its own local GPU MPPI trajectory optimizer (`CuAgent` / `MpcPlanner`), scaling linearly in per-agent computation to 4+ high-DoF manipulators in tight workspaces.
+2. **Horizon Plan-Sharing:** At every control cycle, each arm integrates its MPPI mean acceleration policy (`get_estimated_plan`) over the horizon $H$ and shares its predicted task-space collision spheres $\{(p_{t,s}, r_s)\}_{t=1..H}$ in the world frame (`plans_board`).
+3. **Dynamic Priority Conflict Resolution ($\tau$):** To prevent livelocks and deadlocks in symmetric bottlenecks, each arm weights inter-arm collision costs (`update_col_pred`) by relative goal proximity (`mean_goal_err`):
    $$d_{\text{eff}}(i, j) = d(i, j) \cdot \left(\frac{e_{\text{goal}}(j)}{e_{\text{goal}}(i)}\right)^{\tau}$$
    where $\tau \ge 0$ (`wta_trust`) smoothly prioritizes arms closer to completing their current task.
-4. **Simulator- & Hardware-Agnostic (`mr_storm`):** Run with **NVIDIA Isaac Sim**, **Gazebo (Harmonic / Ignition / Classic)**, **MuJoCo / PyBullet**, **Distributed ROS 2 nodes**, or directly on **physical robots** (Unitree G1, Universal Robots UR5e/UR10e, Franka Emika).
+4. **Unified `main.py` & Simulator/Hardware-Agnostic Layer (`MRStormAgnosticLayer`):** Stays 100% loyal to the original `benchmark_sim.py` classes (`CuAgent`, `MpcPlanner`, `CumotionPlanner`, `PlanPubSub`, `WorldModelWrapper`) while taking observations (`RobotObservation`) and returning embodiment actions (`EmbodimentAction`) for **any simulator** (Isaac Sim, Gazebo, MuJoCo, Kinematic) or **any real hardware** (UR5e/UR10e, Franka, Unitree G1, etc.).
 
 ---
 
 ## Repository Structure
 
 ```text
-├── mr_storm/                       # Simulator- & hardware-agnostic MR-STORM package
+├── main.py                         # Unified simulator- & hardware-agnostic entry point (sync & async modes)
+├── mr_storm/                       # Dedicated agnostic layer & loyal core classes
 │   ├── core/
-│   │   ├── agent.py                # MRStormAgent: standalone single-arm GPU MPPI + horizon plan rollout
-│   │   ├── coordinator.py          # MRStormCoordinator: multi-arm plan-board & priority coordinator
-│   │   └── types.py                # RobotJointState, JointCommand, BroadcastPlanPacket, ArmConfig
+│   │   ├── planners.py             # Loyal extraction of CuPlanner, MpcPlanner, CumotionPlanner, CuAgent, PlanPubSub
+│   │   ├── agnostic_layer.py       # MRStormAgnosticLayer: takes RobotObservation -> returns EmbodimentAction
+│   │   ├── agent.py                # Standalone single-arm wrapper
+│   │   └── coordinator.py          # Multi-arm coordinator
+│   ├── comm/
+│   │   └── plan_comm.py            # LocalPlanBoardComm (sync/shared) & ROSPlanBoardComm (async over ROS 2 / ROS 1)
 │   ├── backends/
-│   │   ├── base.py                 # Abstract RobotBackend interface (plug in any simulator or SDK)
-│   │   ├── gazebo_backend.py       # GazeboROS2Backend (ros2_control trajectory/position/velocity)
-│   │   ├── real_robot_backend.py   # RealRobotBackend + SafetySupervisor + UR RTDE / custom SDK drivers
-│   │   └── kinematic_backend.py    # Lightweight simulator-free backend for rapid testing & CI
-│   └── ros2/
-│       ├── distributed_arm_node.py # True distributed ROS 2 node per arm + /mr_storm/plan_broadcast bus
-│       ├── config/                 # Multi-arm fleet configs (quad_ur5e_fleet.yaml, dual_franka_fleet.yaml)
-│       └── launch/                 # ROS 2 launch files for N distributed arm nodes
-├── examples/                       # Ready-to-run quickstart scripts (Gazebo, Real Robot, ROS 2, Custom Sim)
+│   │   ├── env_adapters.py         # KinematicEnvAdapter, GazeboROSAdapter, RealHardwareEnvAdapter
+│   │   ├── gazebo_backend.py       # Gazebo ros2_control configuration utilities
+│   │   └── real_robot_backend.py   # SafetySupervisor + URRTDEHardwareDriver + CallbackHardwareDriver
+│   └── ros2/                       # ROS 2 launch files and multi-arm fleet configs
+├── examples/                       # Quickstart scripts for Gazebo, Real Robot, ROS 2, and custom simulators
 ├── curobo/                         # Bundled CuRobo fork with custom DynamicObsCost GPU rollout kernels
 └── projects_root/                  # IROS 2026 Isaac Sim benchmark suite, configs, and analysis tools
-    ├── experiments/core_api/       # dataset_collector.py & benchmark_sim.py
+    ├── experiments/core_api/       # dataset_collector.py, benchmark_sim.py, and meta_conf_variants/*.yml
     └── projects/dynamic_obs/       # DynamicObsCollPredictor & runtime_topics
+```
+
+---
+
+## Execution Modes: `synchronous-decentralized` vs `asynchronous-decentralized`
+
+Both modes are supported in **both simulation and real robot hardware** via [`main.py`](main.py) and [`MRStormAgnosticLayer`](mr_storm/core/agnostic_layer.py):
+
+| Mode | CLI Flag | Inter-Robot Communication | Execution Flow |
+| :--- | :---: | :---: | :--- |
+| **1. Synchronous-Decentralized** | `--mode sync` | `LocalPlanBoardComm` (in-memory `plans_board` & `mean_goal_err`, or `--comm ros`) | Exact execution flow of `benchmark_sim.py`: robots compute paths decentrally (`get_estimated_plan` $\to$ `plans_board` $\to$ `update_col_pred` $\to$ `yield_action`), planning one after the next in a pseudo-distributed sequential loop. |
+| **2. Asynchronous-Decentralized** | `--mode async` | `ROSPlanBoardComm` (`--comm ros`, publishes `/mr_storm/robot_<i>/plan` & `/mr_storm/robot_<i>/goal_error` over ROS 2 / ROS 1) | Each robot runs its own independent control loop (in separate OS processes via `--robot_id <i>` or parallel async threads) without waiting for other robots, exchanging horizon sphere plans and goal errors over ROS. |
+
+---
+
+## Unified Entry Point (`main.py`) & Agnostic Layer
+
+### 1. Run Synchronous-Decentralized (Pseudo-Distributed Sequential Planning)
+
+```bash
+# Pure-GPU kinematic backend (runs out of the box without Isaac Sim or Gazebo):
+python3 main.py --mode sync --backend kinematic \
+  --cfg projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms_50steps.yml
+
+# Gazebo (ros2_control):
+python3 main.py --mode sync --backend gazebo \
+  --cfg projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms.yml
+
+# Real Robot Hardware (with SafetySupervisor & UR RTDE IPs):
+python3 main.py --mode sync --backend real --ur_ips 192.168.1.101,192.168.1.102
+
+# NVIDIA Isaac Sim (full stage & physics):
+python3 main.py --mode sync --backend isaac --vis gui
+```
+
+### 2. Run Asynchronous-Decentralized (Communicating Over ROS)
+
+```bash
+# Option A: Run each robot in its own independent OS process / machine over ROS:
+python3 main.py --mode async --comm ros --backend real --robot_id 0 --ur_ips 192.168.1.101 &
+python3 main.py --mode async --comm ros --backend real --robot_id 1 --ur_ips 192.168.1.102 &
+
+# Option B: Run all robots asynchronously in parallel communicating over ROS in Gazebo:
+python3 main.py --mode async --comm ros --backend gazebo \
+  --cfg projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms.yml
+```
+
+### 3. Using `MRStormAgnosticLayer` Directly in Your Own Python Loop
+
+```python
+from curobo.util_file import load_yaml
+from mr_storm import MRStormAgnosticLayer, RobotObservation
+
+meta_cfg = load_yaml("projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms_50steps.yml")
+
+# Create the agnostic layer ('synchronous-decentralized' or 'asynchronous-decentralized')
+layer = MRStormAgnosticLayer(meta_cfg, mode="synchronous-decentralized", comm_type="local")
+
+# Pass simulation or real observations -> receive EmbodimentAction per robot
+observations = layer.get_retract_observations()  # or populate RobotObservation from your sim/robot
+for t in range(100):
+    actions = layer.step_synchronous_decentralized(observations, t)
+    for robot_idx, act in actions.items():
+        # act.positions, act.velocities, act.accelerations, act.joint_names, act.cu_action
+        pass
 ```
 
 ---
@@ -90,7 +154,7 @@ pip install -e .
 
 ### Step 2 (Optional): Install NVIDIA Isaac Sim (For Paper Benchmarks)
 
-If you want to run the **Isaac Sim** benchmark suite (Gazebo, Real Robot, and Custom Simulator backends do **not** require Isaac Sim):
+If you want to run the **Isaac Sim** benchmark suite (Gazebo, Real Robot, and Kinematic backends do **not** require Isaac Sim):
 
 ```bash
 # Option A: Isaac Sim 4.5 (Python 3.10, glibc/ldd >= 2.34)
@@ -102,74 +166,9 @@ pip install isaacsim[all,extscache]==5.0.0 --extra-index-url https://pypi.nvidia
 
 ---
 
-## Multi-Simulator & Real Hardware Quickstart
-
-### 1. Gazebo Simulator (Harmonic / Ignition / Classic via `ros2_control`)
-
-[`GazeboROS2Backend`](mr_storm/backends/gazebo_backend.py) connects MR-STORM directly to Gazebo's `ros2_control` controllers (`JointTrajectoryController` or `ForwardPositionController`).
-
-```bash
-# Generate a ready-to-use ros2_control YAML configuration for your Gazebo multi-arm world:
-python3 examples/01_gazebo_multi_arm.py --print_ros2_control_yaml > my_gazebo_controllers.yaml
-
-# Run MR-STORM against a running Gazebo multi-arm simulation:
-python3 examples/01_gazebo_multi_arm.py \
-  --fleet_config mr_storm/ros2/config/quad_ur5e_fleet.yaml \
-  --command_interface trajectory
-```
-
-### 2. Real Robot Hardware (Any Physical Robot Arm)
-
-[`RealRobotBackend`](mr_storm/backends/real_robot_backend.py) wraps physical manipulators with a real-time [`SafetySupervisor`](mr_storm/backends/real_robot_backend.py) that enforces per-cycle step clamping ($|\Delta q| \le \Delta q_{\max}$), joint position/velocity/acceleration limits, EMA command smoothing, and instant E-Stop.
-
-- **Universal Robots (UR3e / UR5e / UR10e) via `ur_rtde`:**
-  ```bash
-  pip install ur-rtde
-  python3 examples/02_real_robot_multi_arm.py --mode ur_rtde --arm0_ip 192.168.1.101 --arm1_ip 192.168.1.102
-  ```
-- **Any Custom Robot SDK (Unitree G1, Franka, Kinova, CAN bus) in 5 lines of Python:**
-  ```python
-  from mr_storm import ArmConfig, MRStormCoordinator, RealRobotBackend, CallbackHardwareDriver
-
-  coordinator = MRStormCoordinator([
-      ArmConfig(robot_id=0, robot_yml="ur5e.yml", base_pose=[0.0, -0.25, 0.0, 1.0, 0.0, 0.0, 0.0]),
-      ArmConfig(robot_id=1, robot_yml="ur5e.yml", base_pose=[0.0,  0.25, 0.0, 1.0, 0.0, 0.0, 0.0]),
-  ])
-  drivers = {
-      0: CallbackHardwareDriver(coordinator.agents[0].joint_names, read_fn=arm0.get_q_qd, write_fn=arm0.servo_q_qd),
-      1: CallbackHardwareDriver(coordinator.agents[1].joint_names, read_fn=arm1.get_q_qd, write_fn=arm1.servo_q_qd),
-  }
-  backend = RealRobotBackend(drivers=drivers, control_freq_hz=30.0)
-  ```
-
-### 3. Distributed Multi-Arm with ROS 2
-
-In distributed mode, **each robotic arm runs as its own independent OS process or on its own dedicated GPU / PC**. Arms exchange compact binary `BroadcastPlanPacket` messages over the `/mr_storm/plan_broadcast` DDS topic (with automatic latency horizon-shifting) and publish 3D horizon collision sphere markers to RViz2 (`/arm_<i>/horizon_spheres`).
-
-```bash
-# Launch 4 independent decentralized MR-STORM arm nodes:
-ros2 launch mr_storm/ros2/launch/distributed_multi_arm.launch.py \
-  num_arms:=4 \
-  fleet_config:=mr_storm/ros2/config/quad_ur5e_fleet.yaml
-
-# Or launch a single arm node on a dedicated machine/GPU (e.g. Arm 0 on PC 1, Arm 1 on PC 2):
-python3 mr_storm/ros2/distributed_arm_node.py --robot_id 0 --fleet_config mr_storm/ros2/config/quad_ur5e_fleet.yaml
-
-# Send crossing 6-DoF goal poses and monitor the /mr_storm/plan_broadcast bus:
-python3 examples/03_distributed_ros2_goal_sender.py --num_arms 4
-```
-
-### 4. Plugging Into Other Simulators (MuJoCo, PyBullet, CoppeliaSim, Drake)
-
-Subclass [`RobotBackend`](mr_storm/backends/base.py) and implement two methods (`get_joint_states` and `send_joint_commands`). See [`examples/04_custom_simulator_template.py`](examples/04_custom_simulator_template.py) for a complete 25-line working example.
-
----
-
 ## Reproducing the IROS 2026 Paper Benchmarks (Isaac Sim)
 
 All simulation benchmarks from the paper are configured via [`projects_root/experiments/benchmarks/cfgs/combo_cfg.yml`](projects_root/experiments/benchmarks/cfgs/combo_cfg.yml) and executed through [`dataset_collector.py`](projects_root/experiments/core_api/dataset_collector.py).
-
-### Supported Algorithms (`alg`)
 
 | Code | Algorithm | Plan Broadcasting | Priority ($\tau$) | Description |
 | :---: | :--- | :---: | :---: | :--- |
@@ -180,16 +179,7 @@ All simulation benchmarks from the paper are configured via [`projects_root/expe
 | **`CC`** | **CuRobo Centralized** | N/A (Joint Space) | N/A | Centralized CuMotion graph + trajectory optimization baseline |
 | **`D`** | **dRRT\*** | N/A | N/A | Sampling-based multi-robot RRT* baseline |
 
-### Running Benchmark Experiments
-
 ```bash
-# 1. Inspect available CLI options
-python3 projects_root/experiments/core_api/dataset_collector.py --help
-
-# 2. Run with the default combo_cfg.yml (GUI mode)
-python3 projects_root/experiments/core_api/dataset_collector.py
-
-# 3. Run a custom combo config file in headless mode (e.g. on a server/cluster)
 python3 projects_root/experiments/core_api/dataset_collector.py \
   --combo_cfg_path projects_root/experiments/benchmarks/cfgs/combo_cfg.yml \
   --vis_mode headless
@@ -210,14 +200,6 @@ If you find **MR-STORM** useful in your research or applications, please cite ou
   url       = {https://arxiv.org/abs/2602.10114}
 }
 ```
-
----
-
-## Additional Resources & Acknowledgements
-- **[MR-STORM Project Website & Videos](https://roboworkshop.github.io/multi-robot-mpc/)**
-- **[arXiv Paper (2602.10114)](https://arxiv.org/abs/2602.10114)**
-- Built upon [NVIDIA CuRobo](https://curobo.org/) and inspired by [STORM](https://github.com/NVlabs/storm).
-- Supported by Ben-Gurion University of the Negev through the Agricultural, Biological and Cognitive Robotics Initiative, and the Marcus Endowment Fund for Artificial Intelligence.
 
 ## License
 See [LICENSE](LICENSE) for details.

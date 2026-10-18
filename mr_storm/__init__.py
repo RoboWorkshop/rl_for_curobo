@@ -1,25 +1,56 @@
 """
 MR-STORM: Scalable Multi-Arm Control By Distributed MPC (IEEE/RSJ IROS 2026)
 
-Simulator- and hardware-agnostic Python & ROS 2 package for decentralized
-multi-arm trajectory optimization using GPU MPPI, horizon plan-sharing,
-and dynamic priority conflict resolution.
+Simulator- and hardware-agnostic package loyal to the original `benchmark_sim.py`
+implementation (`CuAgent`, `MpcPlanner`, `CumotionPlanner`, `PlanPubSub`,
+`WorldModelWrapper`) with a dedicated agnostic layer (`MRStormAgnosticLayer`)
+and communication backends (`LocalPlanBoardComm`, `ROSPlanBoardComm`) supporting both:
+1. `synchronous-decentralized` (`sync`): pseudo-distributed sequential planning
+2. `asynchronous-decentralized` (`async`): true asynchronous decentralized planning over ROS
 """
 
 from mr_storm.core import (
     ArmConfig,
     BroadcastPlanPacket,
+    CuAgent,
+    CumotionPlanner,
+    CuPlanner,
+    EmbodimentAction,
     JointCommand,
+    JointsStateWrap,
+    MpcPlanner,
     MRStormAgent,
+    MRStormAgnosticLayer,
     MRStormCoordinator,
+    Plan,
+    PlanPubSub,
+    PoseUtils,
     RobotJointState,
+    RobotObservation,
+    Stopwatch,
+    build_cu_agents_from_meta_cfg,
     calculate_robot_sphere_count,
+    get_per_axis_euler_error,
+    publish_robot_context,
+    publish_to_context,
+    recursive_fill_from_default,
     resolve_repo_path,
 )
+from mr_storm.comm import (
+    LocalPlanBoardComm,
+    PlanCommBackend,
+    ROSPlanBoardComm,
+    pack_sphere_plan_bytes,
+    unpack_sphere_plan_bytes,
+)
 from mr_storm.backends import (
+    BaseEnvAdapter,
     CallbackHardwareDriver,
     GazeboROS2Backend,
+    GazeboROSAdapter,
     KinematicBackend,
+    KinematicEnvAdapter,
+    RealHardwareEnvAdapter,
     RealRobotBackend,
     RobotBackend,
     SafetyLimits,
@@ -34,15 +65,41 @@ __version__ = "1.0.0"
 __all__ = [
     "ArmConfig",
     "BroadcastPlanPacket",
+    "CuAgent",
+    "CumotionPlanner",
+    "CuPlanner",
+    "EmbodimentAction",
     "JointCommand",
+    "JointsStateWrap",
+    "MpcPlanner",
     "MRStormAgent",
+    "MRStormAgnosticLayer",
     "MRStormCoordinator",
+    "Plan",
+    "PlanPubSub",
+    "PoseUtils",
     "RobotJointState",
+    "RobotObservation",
+    "Stopwatch",
+    "build_cu_agents_from_meta_cfg",
     "calculate_robot_sphere_count",
+    "get_per_axis_euler_error",
+    "publish_robot_context",
+    "publish_to_context",
+    "recursive_fill_from_default",
     "resolve_repo_path",
+    "LocalPlanBoardComm",
+    "PlanCommBackend",
+    "ROSPlanBoardComm",
+    "pack_sphere_plan_bytes",
+    "unpack_sphere_plan_bytes",
+    "BaseEnvAdapter",
     "CallbackHardwareDriver",
     "GazeboROS2Backend",
+    "GazeboROSAdapter",
     "KinematicBackend",
+    "KinematicEnvAdapter",
+    "RealHardwareEnvAdapter",
     "RealRobotBackend",
     "RobotBackend",
     "SafetyLimits",

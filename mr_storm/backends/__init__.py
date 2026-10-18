@@ -12,6 +12,12 @@ from mr_storm.backends.real_robot_backend import (
     SingleArmHardwareDriver,
     URRTDEHardwareDriver,
 )
+from mr_storm.backends.env_adapters import (
+    BaseEnvAdapter,
+    GazeboROSAdapter,
+    KinematicEnvAdapter,
+    RealHardwareEnvAdapter,
+)
 
 __all__ = [
     "RobotBackend",
@@ -24,4 +30,8 @@ __all__ = [
     "SafetySupervisor",
     "SingleArmHardwareDriver",
     "URRTDEHardwareDriver",
+    "BaseEnvAdapter",
+    "GazeboROSAdapter",
+    "KinematicEnvAdapter",
+    "RealHardwareEnvAdapter",
 ]
