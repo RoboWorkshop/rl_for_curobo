@@ -47,67 +47,114 @@ Centralized motion planning algorithms struggle to scale in multi-arm manipulati
 │   ├── backends/
 │   │   ├── env_adapters.py         # KinematicEnvAdapter, GazeboROSAdapter, RealHardwareEnvAdapter
 │   │   ├── gazebo_backend.py       # Gazebo ros2_control configuration utilities
-│   │   └── real_robot_backend.py   # SafetySupervisor + URRTDEHardwareDriver + CallbackHardwareDriver
+│   │   └── real_robot_backend.py   # SafetySupervisor + UnitreeG1SocketDriver + URRTDEHardwareDriver + CallbackHardwareDriver
 │   └── ros2/                       # ROS 2 launch files and multi-arm fleet configs
 ├── examples/                       # Quickstart scripts for Gazebo, Real Robot, ROS 2, and custom simulators
-├── curobo/                         # Bundled CuRobo fork with custom DynamicObsCost GPU rollout kernels
-└── projects_root/                  # IROS 2026 Isaac Sim benchmark suite, configs, and analysis tools
-    ├── experiments/core_api/       # dataset_collector.py, benchmark_sim.py, and meta_conf_variants/*.yml
+├── curobo/                         # Bundled CuRobo fork with custom DynamicObsCost GPU rollout kernels & G1 assets
+│   └── src/curobo/content/
+│       ├── assets/robot/g1_feb26/  # Unitree G1 left/right arm URDFs & meshes
+│       └── configs/robot/g1_feb26/ # Unitree G1 arm & collision sphere configs
+└── projects_root/                  # IROS 2026 Isaac Sim benchmark suite, real-world G1 experiments, and configs
+    ├── real_world/                 # Unitree G1 real-world configs (meta_cfg_g1.yml, combo_cfg_board_g1.yml) & ROS 2 socket servers
+    ├── experiments/core_api/       # dataset_collector.py, dataset_collector_both.py, benchmark_sim.py, benchmark_both.py
     └── projects/dynamic_obs/       # DynamicObsCollPredictor & runtime_topics
 ```
 
 ---
 
-## Execution Modes: `synchronous-decentralized` vs `asynchronous-decentralized`
+## Execution Streams: `decentralized-synchronous` vs `decentralized-asynchronous`
 
-Both modes are supported in **both simulation and real robot hardware** via [`main.py`](main.py) and [`MRStormAgnosticLayer`](mr_storm/core/agnostic_layer.py):
+MR-STORM supports **two main execution streams** across both simulation and real robot hardware via [`main.py`](main.py) and [`MRStormAgnosticLayer`](mr_storm/core/agnostic_layer.py):
 
-| Mode | CLI Flag | Inter-Robot Communication | Execution Flow |
+| Stream | CLI Flag | Inter-Robot Communication | Execution Flow |
 | :--- | :---: | :---: | :--- |
-| **1. Synchronous-Decentralized** | `--mode sync` | `LocalPlanBoardComm` (in-memory `plans_board` & `mean_goal_err`, or `--comm ros`) | Exact execution flow of `benchmark_sim.py`: robots compute paths decentrally (`get_estimated_plan` $\to$ `plans_board` $\to$ `update_col_pred` $\to$ `yield_action`), planning one after the next in a pseudo-distributed sequential loop. |
-| **2. Asynchronous-Decentralized** | `--mode async` | `ROSPlanBoardComm` (`--comm ros`, publishes `/mr_storm/robot_<i>/plan` & `/mr_storm/robot_<i>/goal_error` over ROS 2 / ROS 1) | Each robot runs its own independent control loop (in separate OS processes via `--robot_id <i>` or parallel async threads) without waiting for other robots, exchanging horizon sphere plans and goal errors over ROS. |
+| **Stream 1: Decentralized-Synchronous** | `--mode sync` | `LocalPlanBoardComm` (in-memory `plans_board` & `mean_goal_err`, or `--comm ros`) | Exact execution flow of `benchmark_sim.py` & `benchmark_both.py`: robots compute paths decentrally (`get_estimated_plan` $\to$ `plans_board` $\to$ `update_col_pred` $\to$ `yield_action`), planning one after the next in a pseudo-distributed sequential loop. |
+| **Stream 2: Decentralized-Asynchronous (with ROS)** | `--mode async` | `ROSPlanBoardComm` (`--comm ros`, publishes `/mr_storm/robot_<i>/plan` & `/mr_storm/robot_<i>/goal_error` over ROS 2 / ROS 1) | Each robot runs its own independent control loop (in separate OS processes via `--robot_id <i>` or parallel async threads) without waiting for other robots, exchanging horizon sphere plans and goal errors over ROS. |
 
 ---
 
-## Unified Entry Point (`main.py`) & Agnostic Layer
+## Stream 1: Decentralized-Synchronous (`synchronous-decentralized`)
 
-### 1. Run Synchronous-Decentralized (Pseudo-Distributed Sequential Planning)
+### 1A. Real-Robot Example: Unitree G1 Dual-Arm Experiments (`projects_root/real_world/`)
+
+The repository includes the complete **Unitree G1 (29-DoF humanoid, dual 7-DoF arms)** real-world experiment suite under [`projects_root/real_world/`](projects_root/real_world/) and [`curobo/src/curobo/content/configs/robot/g1_feb26/`](curobo/src/curobo/content/configs/robot/g1_feb26/):
+
+- **Configs:**
+  - [`projects_root/real_world/meta_cfg_g1.yml`](projects_root/real_world/meta_cfg_g1.yml): Dual-arm G1 (`g1_feb26/left_arm_only.yml` and `g1_feb26/right_arm_only.yml`) with torso, wall, and leg cuboid obstacles and custom MPPI particle config [`particle_mpc.yml`](projects_root/real_world/particle_mpc.yml).
+  - [`projects_root/real_world/combo_cfg_g1.yml`](projects_root/real_world/combo_cfg_g1.yml): Interactive manual target-tracking experiment for the 2 G1 arms.
+  - [`projects_root/real_world/combo_cfg_board_g1.yml`](projects_root/real_world/combo_cfg_board_g1.yml): Vertical board manipulation task (`RealWorldVerticallBoard`) from the real-world experiments.
+- **ROS 2 Low-State / Low-Cmd Unix Socket Bridge (`projects_root/real_world/servers/`):**
+  - [`reader_server.py`](projects_root/real_world/servers/reader_server.py): Subscribes to `/lowstate` (`unitree_hg/msg/LowState`) in system ROS 2 Python and serves 7-DoF left/right arm joint states over `/tmp/lowstate.sock`.
+  - [`writer_server.py`](projects_root/real_world/servers/writer_server.py): Listens on `/tmp/lowcmd.sock` and publishes 200 Hz `trajectory_msgs/msg/JointTrajectory` commands to `/arm_plan`.
+
+#### Running the Unitree G1 Real-Robot / Digital-Twin Experiment:
+```bash
+# Terminal 1 (System Python with ROS 2): Start G1 LowState Reader Server
+python3 projects_root/real_world/servers/reader_server.py
+
+# Terminal 2 (System Python with ROS 2): Start G1 JointTrajectory Writer Server
+python3 projects_root/real_world/servers/writer_server.py
+
+# Terminal 3 Option A (Isaac Sim Digital Twin + Real G1 Hardware in Decentralized-Synchronous mode):
+# Omit `--real` to run in simulation-only mode
+python3 projects_root/experiments/core_api/dataset_collector_both.py \
+  --combo_cfg projects_root/real_world/combo_cfg_board_g1.yml --real
+
+# Terminal 3 Option B (Unified Agnostic `main.py` with `UnitreeG1SocketDriver` in Decentralized-Synchronous mode):
+python3 main.py --mode sync --backend g1_real \
+  --cfg projects_root/real_world/meta_cfg_g1.yml
+```
+
+### 1B. Unified `main.py` in Decentralized-Synchronous Mode (Any Simulator or Hardware)
 
 ```bash
 # Pure-GPU kinematic backend (runs out of the box without Isaac Sim or Gazebo):
 python3 main.py --mode sync --backend kinematic \
   --cfg projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms_50steps.yml
 
+# Unitree G1 Dual-Arm (pure-GPU kinematic simulation with G1 URDFs & obstacles):
+python3 main.py --mode sync --backend kinematic \
+  --cfg projects_root/real_world/meta_cfg_g1.yml
+
 # Gazebo (ros2_control):
 python3 main.py --mode sync --backend gazebo \
   --cfg projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms.yml
 
-# Real Robot Hardware (with SafetySupervisor & UR RTDE IPs):
+# Real Universal Robots (UR5e / UR10e with SafetySupervisor & UR RTDE IPs):
 python3 main.py --mode sync --backend real --ur_ips 192.168.1.101,192.168.1.102
 
 # NVIDIA Isaac Sim (full stage & physics):
 python3 main.py --mode sync --backend isaac --vis gui
 ```
 
-### 2. Run Asynchronous-Decentralized (Communicating Over ROS)
+---
+
+## Stream 2: Decentralized-Asynchronous with ROS (`asynchronous-decentralized`)
+
+In **decentralized-asynchronous** mode (`--mode async --comm ros`), robots do not wait for one another in a sequential loop; instead, each arm plans at its own independent frequency and broadcasts its horizon task-space spheres (`plan['task_space']['spheres']`) and goal error (`mean_goal_err`) over ROS (`ROSPlanBoardComm`):
 
 ```bash
-# Option A: Run each robot in its own independent OS process / machine over ROS:
+# Option A: Run each physical robot arm in its own independent OS process / machine over ROS:
 python3 main.py --mode async --comm ros --backend real --robot_id 0 --ur_ips 192.168.1.101 &
 python3 main.py --mode async --comm ros --backend real --robot_id 1 --ur_ips 192.168.1.102 &
 
-# Option B: Run all robots asynchronously in parallel communicating over ROS in Gazebo:
+# Option B: Run Unitree G1 left and right arms asynchronously over ROS:
+python3 main.py --mode async --comm ros --backend g1_real --cfg projects_root/real_world/meta_cfg_g1.yml
+
+# Option C: Run all robots asynchronously in parallel communicating over ROS in Gazebo:
 python3 main.py --mode async --comm ros --backend gazebo \
   --cfg projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms.yml
 ```
 
-### 3. Using `MRStormAgnosticLayer` Directly in Your Own Python Loop
+---
+
+## Using `MRStormAgnosticLayer` Directly in Your Own Python Loop
 
 ```python
 from curobo.util_file import load_yaml
 from mr_storm import MRStormAgnosticLayer, RobotObservation
 
-meta_cfg = load_yaml("projects_root/experiments/core_api/meta_conf_variants/meta_cfg_arms_50steps.yml")
+meta_cfg = load_yaml("projects_root/real_world/meta_cfg_g1.yml")
 
 # Create the agnostic layer ('synchronous-decentralized' or 'asynchronous-decentralized')
 layer = MRStormAgnosticLayer(meta_cfg, mode="synchronous-decentralized", comm_type="local")

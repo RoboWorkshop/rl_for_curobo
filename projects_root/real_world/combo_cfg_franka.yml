@@ -1,0 +1,15 @@
+base: [projects_root/real_world/meta_cfg_franka.yml]
+alg: [O] # , SD, CC, O, O-] #'O'] # ['SC'] # [O] # [O, SC, SD, CC, O-]
+robot_fam: ['franka'] # ['g1'] # ['franka'] #  #[ ur5e]
+robot_type: [2] # ['2_arms_only'] # ['4_05'] # ['4_05'] # ['2_05b'] # ['2_05'] # ['2_05', '4_04']
+task_seed: [0]
+task_to_levels:
+  manual: [1]
+  # bin: [5]
+  # reach: [9]
+  # follow: [5]
+  # reach: [1,2,3,4,5]
+  # follow: [1,2,3,4,5]
+  # bin: [1,2,3,4,5]
+  
+# particle: {'init_cov':[0.05,0.3, 0.5],'wta_trust':[1.0,2.0, 3.0, 5.0],'wta_weight':[50000]}

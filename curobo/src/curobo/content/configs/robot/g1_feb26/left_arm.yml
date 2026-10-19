@@ -1,0 +1,92 @@
+
+robot_cfg:
+  kinematics:
+    base_link: waist_yaw_link
+    ee_link: dummy_ee_left_link
+    use_usd_kinematics: False
+
+    # File paths
+    urdf_path: "robot/g1_feb26/unitreerobotics unitree_ros master robots-g1_description/g1_left_arm.urdf"
+
+    # Collision configuration
+    collision_link_names:
+      - waist_yaw_link
+      - waist_roll_link
+      - waist_support_link
+      - torso_link
+      - head_link
+      - left_shoulder_pitch_link
+      - left_shoulder_roll_link
+      - left_shoulder_yaw_link
+      - left_elbow_link
+      - left_wrist_roll_link
+      - left_wrist_pitch_link
+      - left_wrist_yaw_link
+      - left_rubber_hand
+      
+    mesh_link_names:
+      - waist_yaw_link
+      - torso_link
+      - head_link
+      - logo_link
+      - left_shoulder_pitch_link
+      - left_shoulder_roll_link
+      - left_shoulder_yaw_link
+      - left_elbow_link
+      - left_wrist_roll_link
+      - left_wrist_pitch_link
+      - left_wrist_yaw_link
+      - left_rubber_hand
+      - dummy_ee_left_link
+      
+    lock_joints: {}
+    
+    collision_sphere_buffer: 0.0001
+
+    self_collision_buffer:
+      waist_yaw_link: 0.0001
+      waist_roll_link: 0.0001
+      waist_support_link: 0.0001
+      torso_link: 0.0001
+      head_link: 0.0001
+      left_shoulder_pitch_link: 0.0001
+      left_shoulder_roll_link: 0.0001
+      left_shoulder_yaw_link: 0.0001
+      left_elbow_link: 0.0001
+      left_rubber_hand: 0.0001
+
+    self_collision_ignore: {
+      "left_shoulder_pitch_link": ["head_link", "left_shoulder_roll_link", "left_shoulder_yaw_link", "left_elbow_link", "torso_link"],
+      "left_shoulder_roll_link": ["head_link", "left_shoulder_pitch_link", "left_shoulder_yaw_link", "left_elbow_link", "torso_link"],
+      "left_shoulder_yaw_link": ["head_link", "left_shoulder_roll_link", "left_shoulder_pitch_link", "left_elbow_link"],
+      "left_elbow_link": ["left_shoulder_roll_link", "left_shoulder_pitch_link", "left_shoulder_yaw_link", "left_rubber_hand", "left_wrist_roll_link", "left_wrist_pitch_link", "left_wrist_yaw_link"],
+      "left_wrist_roll_link": ["left_elbow_link", "left_wrist_pitch_link", "left_wrist_yaw_link", "left_rubber_hand"],
+      "left_wrist_pitch_link": ["left_wrist_roll_link", "left_wrist_yaw_link", "left_rubber_hand", "left_elbow_link"],
+      "left_wrist_yaw_link": ["left_wrist_roll_link", "left_wrist_pitch_link", "left_rubber_hand", "left_elbow_link"],
+      "left_rubber_hand": ["left_elbow_link", "left_wrist_roll_link", "left_wrist_pitch_link", "left_wrist_yaw_link"],
+      "torso_link": ["head_link", "left_shoulder_pitch_link", "left_shoulder_roll_link", "left_elbow_link", "waist_yaw_link", "waist_roll_link", "waist_support_link"],
+      "head_link": ["torso_link", "left_shoulder_pitch_link", "left_shoulder_roll_link", "left_shoulder_yaw_link", "waist_yaw_link"],
+      "waist_yaw_link": ["waist_roll_link", "waist_support_link", "torso_link", "left_shoulder_pitch_link", "left_shoulder_roll_link", "head_link"],
+      "waist_roll_link": ["waist_yaw_link", "waist_support_link", "torso_link", "left_shoulder_pitch_link", "left_shoulder_roll_link"],
+      "waist_support_link": ["waist_yaw_link", "waist_roll_link", "torso_link", "left_shoulder_pitch_link", "left_shoulder_roll_link"],
+    }
+
+    collision_spheres: spheres/g1_left_arm.yml
+
+    cspace:
+      joint_names:
+        - left_shoulder_pitch_joint
+        - left_shoulder_roll_joint
+        - left_shoulder_yaw_joint
+        - left_elbow_joint
+        - left_wrist_roll_joint
+        - left_wrist_pitch_joint
+        - left_wrist_yaw_joint
+      retract_config: [0, 0.3, 0.0, 0.5, 0.0, 0.0,0.0]
+      null_space_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      cspace_distance_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      # max_acceleration: 5.0
+      # max_jerk: 20.0
+      max_acceleration: 10.0 # todo: check this (a guess, I could not find the max jerk of G1 anywhere in the docs)
+      max_jerk: 15.0 # todo: check this. (a guess, I could not find the max jerk of G1 anywhere in the docs)
+

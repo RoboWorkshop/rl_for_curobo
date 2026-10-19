@@ -1,0 +1,110 @@
+collision_spheres:
+  # Left Arm
+  left_shoulder_pitch_link:
+    - center: [-0.004, 0.06, -0.03] # -0.001
+      radius: 0.052
+  left_shoulder_roll_link:
+    - center: [0.0, 0.002, -0.069]
+      radius: 0.04
+  left_shoulder_yaw_link:
+    - center: [0.0, 0.0, -0.02]
+      radius: 0.04
+    - center: [0.0, 0.0, -0.05]
+      radius: 0.04
+    - center: [0.0, 0.0, -0.08]
+      radius: 0.05
+  
+  left_elbow_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.035
+    - center: [0.05, 0.0, 0.0]
+      radius: 0.04
+    - center: [0.08, 0.0, 0.0]
+      radius: 0.035
+      
+  left_wrist_roll_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.035
+      
+  left_wrist_pitch_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.035
+      
+  left_wrist_yaw_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.035
+      
+  left_rubber_hand:
+    # Palm Base (5x3 grid in XZ plane)
+    # Swapped Y -> Z from previous attempt
+    - center: [0.0, 0.0, -0.04]
+      radius: 0.02
+    - center: [0.0, 0.0, -0.02]
+      radius: 0.02
+    - center: [0.0, 0.0, 0.0]
+      radius: 0.02
+    - center: [0.0, 0.0, 0.02]
+      radius: 0.02
+    - center: [0.0, 0.0, 0.04]
+      radius: 0.02
+    - center: [0.02, 0.0, -0.04]
+      radius: 0.02
+    - center: [0.02, 0.0, -0.02]
+      radius: 0.02
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.02
+    - center: [0.02, 0.0, 0.02]
+      radius: 0.02
+    - center: [0.02, 0.0, 0.04]
+      radius: 0.02
+    - center: [0.04, 0.0, -0.04]
+      radius: 0.02
+    - center: [0.04, 0.0, -0.02]
+      radius: 0.02
+    - center: [0.04, 0.0, 0.0]
+      radius: 0.02
+    - center: [0.04, 0.0, 0.02]
+      radius: 0.02
+    - center: [0.04, 0.0, 0.04]
+      radius: 0.02
+    # Fingers (3 fingers, extending in X, width in Z)
+    - center: [0.06, 0.0, -0.03]
+      radius: 0.015
+    - center: [0.06, 0.0, 0.0]
+      radius: 0.015
+    - center: [0.06, 0.0, 0.03]
+      radius: 0.015
+    - center: [0.08, 0.0, -0.03]
+      radius: 0.015
+    - center: [0.08, 0.0, 0.0]
+      radius: 0.015
+    - center: [0.08, 0.0, 0.03]
+      radius: 0.015
+    - center: [0.10, 0.0, -0.03]
+      radius: 0.015
+    - center: [0.10, 0.0, 0.0]
+      radius: 0.015
+    - center: [0.10, 0.0, 0.03]
+      radius: 0.015
+    # Thumb approx (Offset in Z)
+    # - center: [0.02, 0.0, -0.06]
+    #   radius: 0.015
+    # - center: [0.04, 0.0, -0.06]
+    #   radius: 0.015
+    # - center: [0.06, 0.0, -0.05]
+    #   radius: 0.015
+    # Fingertips (5 tips, 45deg inward bend - estimated x+=0.03, y+=0.02, z distributed)
+    # Assuming "inward" means curling towards palm (Y-axis offset)
+    # Thumb Tip
+    - center: [0.075, -0.01, 0.05] # [0.05, 0.0, 0.07] 
+      radius: 0.025
+    # Index-Middle Tip
+    - center: [0.12, -0.03, 0.035]
+      radius: 0.02
+    # Middle-Ring Tip
+    - center: [0.125, -0.03, 0.0]
+      radius: 0.02
+    # Ring-Pinky Tip
+    - center: [0.12, -0.03, -0.035]
+      radius: 0.02
+

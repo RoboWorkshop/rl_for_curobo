@@ -1,0 +1,539 @@
+Terminal 1:
+
+humanoid@dt-hm10:~$ history
+    1  reboot now
+    2  sudo reboot now
+    3  history
+    4  history
+    5  history
+    6  nvidia-smi 
+    7  sudo apt update 
+    8  apt list --upgradable
+    9  sudo apt upgrade -y
+   10  whiami
+   11  whoami
+   12  sudo apt install nvidia-driver-590-open
+   13  sudo reboot now
+   14  nvidia-smi 
+   15  nvidia-detector 
+   16  nvidia-settings 
+   17  nvidia-smi 
+   18  locale
+   19  sudo apt update && sudo apt install locales
+   20  sudo locale-gen en_US en_US.UTF-8
+   21  sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+   22  export LANG=en_US.UTF-8
+   23  locale  # verify settings
+   24  sudo apt install software-properties-common
+   25  sudo add-apt-repository universe
+   26  sudo apt update && sudo apt install curl -y
+   27  export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+   28  curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+   29  sudo dpkg -i /tmp/ros2-apt-source.deb
+   30  sudo apt update && sudo apt install ros-dev-tools
+   31  sudo apt update
+   32  sudo apt upgrade
+   33  nvidia-smi
+   34  clear
+   35  watch nvidia-smi 
+   36  watch ps
+   37  watch --help
+   38  watch -n .1 ps
+   39  ros2
+   40  sudo apt install ros-jazzy-desktop
+   41  source /opt/ros/jazzy/setup.bash
+   42  ros2 run demo_nodes_cpp talker &
+   43  source /opt/ros/jazzy/setup.bash
+   44  ros2 run demo_nodes_py listener
+   45  ps aux | grep talk
+   46  kill 15855
+   47  ros2 run demo_nodes_py listener
+   48  ps aux | grep talk
+   49  kill 15859
+   50  ps aux | grep talk
+   51  ros2 run demo_nodes_py listener
+   52  ros2 topic list
+   53  ros2 topic echo /lowstate
+   54  ros2 topic hz /lowstate
+   55  apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   56  sudo apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   57  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   58  ls
+   59  cd unitree_sdk2/
+   60  mkdir build
+   61  cd build
+   62  cmake ..
+   63  make
+   64  sudo make install
+   65  mkdir build
+   66  cd build
+   67  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   68  sudo make install
+   69  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   70  ..
+   71  ls
+   72  cd ..
+   73  ls
+   74  ..
+   75  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   76  cd unitree_sdk2/
+   77  mkdir build
+   78  cd build/
+   79  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   80  sudo make install
+   81  ros2 topic list
+   82  source /opt/ros/jazzy/setup.bash 
+   83  ros2 topic list
+   84  ros2 topic echo /lowstate
+   85  cd ..
+   86  git clone https://github.com/unitreerobotics/unitree_ros2
+   87  sudo apt install ros-jazzy-rmw-cyclonedds-cpp
+   88  sudo apt install ros-jazzy-rosidl-generator-dds-idl 
+   89  sudo apt install libyaml-cpp-dev 
+   90  cd unitree_ros2/
+   91  ls
+   92  colcon build
+   93  source install/setup.bash 
+   94  ros2 topic list
+   95  ros2 topic echo /lowstate
+   96  ros2 topic echo /lowcmd
+   97  nvidia-smi
+   98  gedit
+   99  sudo apt install gedit
+  100  gedit .bashrc
+  101  cd ..
+  102  pwd
+  103  ls
+  104  cd ..
+  105  ls
+  106  cd Downloads/
+  107  ls
+  108  cd ..
+  109  sudo mkdir -p /etc/apt/keyrings
+  110  curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg |   sudo gpg --dearmor --yes -o /etc/apt/keyrings/antigravity-repo-key.gpg
+  111  sudo apt update
+  112  sudo apt install antigravity
+  113  pwd
+  114  ls
+  115  sudo mkdir -p /etc/apt/keyrings
+  116  curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg |   sudo gpg --dearmor --yes -o /etc/apt/keyrings/antigravity-repo-key.gpg
+  117  echo "deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ antigravity-debian main" |   sudo tee /etc/apt/sources.list.d/antigravity.list > /dev/null
+  118  sudo apt update
+  119  sudo apt install antigravity
+  120  which python
+  121  python
+  122  python3
+  123  history
+
+
+
+
+
+
+
+
+
+
+
+
+################################################################
+Terminal 2:
+
+humanoid@dt-hm10:~/dane/rl_for_curobo$ history
+    1  reboot now
+    2  sudo reboot now
+    3  history
+    4  history
+    5  history
+    6  nvidia-smi 
+    7  sudo apt update 
+    8  apt list --upgradable
+    9  sudo apt upgrade -y
+   10  whiami
+   11  whoami
+   12  sudo apt install nvidia-driver-590-open
+   13  sudo reboot now
+   14  nvidia-smi 
+   15  nvidia-detector 
+   16  nvidia-settings 
+   17  nvidia-smi 
+   18  locale
+   19  sudo apt update && sudo apt install locales
+   20  sudo locale-gen en_US en_US.UTF-8
+   21  sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+   22  export LANG=en_US.UTF-8
+   23  locale  # verify settings
+   24  sudo apt install software-properties-common
+   25  sudo add-apt-repository universe
+   26  sudo apt update && sudo apt install curl -y
+   27  export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+   28  curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+   29  sudo dpkg -i /tmp/ros2-apt-source.deb
+   30  sudo apt update && sudo apt install ros-dev-tools
+   31  sudo apt update
+   32  sudo apt upgrade
+   33  nvidia-smi
+   34  clear
+   35  watch nvidia-smi 
+   36  watch ps
+   37  watch --help
+   38  watch -n .1 ps
+   39  ros2
+   40  sudo apt install ros-jazzy-desktop
+   41  source /opt/ros/jazzy/setup.bash
+   42  ros2 run demo_nodes_cpp talker &
+   43  source /opt/ros/jazzy/setup.bash
+   44  ros2 run demo_nodes_py listener
+   45  ps aux | grep talk
+   46  kill 15855
+   47  ros2 run demo_nodes_py listener
+   48  ps aux | grep talk
+   49  kill 15859
+   50  ps aux | grep talk
+   51  ros2 run demo_nodes_py listener
+   52  ros2 topic list
+   53  ros2 topic echo /lowstate
+   54  ros2 topic hz /lowstate
+   55  apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   56  sudo apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   57  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   58  ls
+   59  cd unitree_sdk2/
+   60  mkdir build
+   61  cd build
+   62  cmake ..
+   63  make
+   64  sudo make install
+   65  mkdir build
+   66  cd build
+   67  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   68  sudo make install
+   69  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   70  ..
+   71  ls
+   72  cd ..
+   73  ls
+   74  ..
+   75  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   76  cd unitree_sdk2/
+   77  mkdir build
+   78  cd build/
+   79  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   80  sudo make install
+   81  ros2 topic list
+   82  source /opt/ros/jazzy/setup.bash 
+   83  ros2 topic list
+   84  ros2 topic echo /lowstate
+   85  cd ..
+   86  git clone https://github.com/unitreerobotics/unitree_ros2
+   87  sudo apt install ros-jazzy-rmw-cyclonedds-cpp
+   88  sudo apt install ros-jazzy-rosidl-generator-dds-idl 
+   89  sudo apt install libyaml-cpp-dev 
+   90  cd unitree_ros2/
+   91  ls
+   92  colcon build
+   93  source install/setup.bash 
+   94  ros2 topic list
+   95  ros2 topic echo /lowstate
+   96  ros2 topic echo /lowcmd
+   97  nvidia-smi
+   98  gedit
+   99  sudo apt install gedit
+  100  gedit .bashrc
+  101  git pull curl -O https://repo.anaconda.com/archive/Anaconda3-2025.12-2-Linux-x86_64.sh
+  102  git clone curl -O https://repo.anaconda.com/archive/Anaconda3-2025.12-2-Linux-x86_64.sh
+  103  git clone https://github.com/Dan7171/rl_for_curobo.git
+  104  history
+  105  conda create -n mr_storm python=3.10
+  106  which conda
+  107  cd rl_for_curobo/
+  108  git-lfs clone
+  109  git lfs clone
+  110  git lfs pull
+  111  git branch
+  112  git checkout  real_world 
+  113  pwd
+  114  ls
+  115  cd ..
+  116  pwd
+  117  cd rl_for_curobo/
+  118  history
+
+
+
+#########################################################
+Terminal 3: (isaac sim installation)
+
+(mr_storm) humanoid@dt-hm10:~/dane$ history
+    1  reboot now
+    2  sudo reboot now
+    3  history
+    4  history
+    5  history
+    6  nvidia-smi 
+    7  sudo apt update 
+    8  apt list --upgradable
+    9  sudo apt upgrade -y
+   10  whiami
+   11  whoami
+   12  sudo apt install nvidia-driver-590-open
+   13  sudo reboot now
+   14  nvidia-smi 
+   15  nvidia-detector 
+   16  nvidia-settings 
+   17  nvidia-smi 
+   18  locale
+   19  sudo apt update && sudo apt install locales
+   20  sudo locale-gen en_US en_US.UTF-8
+   21  sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+   22  export LANG=en_US.UTF-8
+   23  locale  # verify settings
+   24  sudo apt install software-properties-common
+   25  sudo add-apt-repository universe
+   26  sudo apt update && sudo apt install curl -y
+   27  export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+   28  curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+   29  sudo dpkg -i /tmp/ros2-apt-source.deb
+   30  sudo apt update && sudo apt install ros-dev-tools
+   31  sudo apt update
+   32  sudo apt upgrade
+   33  nvidia-smi
+   34  clear
+   35  watch nvidia-smi 
+   36  watch ps
+   37  watch --help
+   38  watch -n .1 ps
+   39  ros2
+   40  sudo apt install ros-jazzy-desktop
+   41  source /opt/ros/jazzy/setup.bash
+   42  ros2 run demo_nodes_cpp talker &
+   43  source /opt/ros/jazzy/setup.bash
+   44  ros2 run demo_nodes_py listener
+   45  ps aux | grep talk
+   46  kill 15855
+   47  ros2 run demo_nodes_py listener
+   48  ps aux | grep talk
+   49  kill 15859
+   50  ps aux | grep talk
+   51  ros2 run demo_nodes_py listener
+   52  ros2 topic list
+   53  ros2 topic echo /lowstate
+   54  ros2 topic hz /lowstate
+   55  apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   56  sudo apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   57  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   58  ls
+   59  cd unitree_sdk2/
+   60  mkdir build
+   61  cd build
+   62  cmake ..
+   63  make
+   64  sudo make install
+   65  mkdir build
+   66  cd build
+   67  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   68  sudo make install
+   69  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   70  ..
+   71  ls
+   72  cd ..
+   73  ls
+   74  ..
+   75  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   76  cd unitree_sdk2/
+   77  mkdir build
+   78  cd build/
+   79  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   80  sudo make install
+   81  ros2 topic list
+   82  source /opt/ros/jazzy/setup.bash 
+   83  ros2 topic list
+   84  ros2 topic echo /lowstate
+   85  cd ..
+   86  git clone https://github.com/unitreerobotics/unitree_ros2
+   87  sudo apt install ros-jazzy-rmw-cyclonedds-cpp
+   88  sudo apt install ros-jazzy-rosidl-generator-dds-idl 
+   89  sudo apt install libyaml-cpp-dev 
+   90  cd unitree_ros2/
+   91  ls
+   92  colcon build
+   93  source install/setup.bash 
+   94  ros2 topic list
+   95  ros2 topic echo /lowstate
+   96  ros2 topic echo /lowcmd
+   97  nvidia-smi
+   98  gedit
+   99  sudo apt install gedit
+  100  gedit .bashrc
+  101  ros2 topic list
+  102  ros2 topic echo /lowstate
+  103  nvidia-smi
+  104  lscpu
+  105  apt-get install git
+  106  sudo apt-get install git
+  107  git status
+  108  pwd
+  109  mkdir dane
+  110  pwd
+  111  ls
+  112  cd dane
+  113  sudo apt-get install git-lfs
+  114  curl -O https://repo.anaconda.com/archive/Anaconda3-2025.12-2-Linux-x86_64.sh
+  115  bash ~/Anaconda3-2025.12-2-Linux-x86_64.sh
+  116  ls /home/humanoid/anc
+  117  bash ~/Anaconda3-2025.12-2-Linux-x86_64.sh
+  118  conda create -n mr_storm python=3.10
+  119  which conda
+  120  conda activate
+  121  eval "$(/home/humanoid/anaconda3/bin/conda shell.bash hook)"
+  122  conda deactivate
+  123  which conda
+  124  conda create -n mr_storm python=3.10
+  125  conda env list
+  126  conda create -n mr_storm python=3.11
+  127  conda activaet mr_storm
+  128  conda activate mr_storm
+  129  pip install isaacsim[all,extscache]==5.0.0 --extra-index-url https://pypi.nvidia.com
+  130  pip install "packaging>=24.0"
+  131  pip install "packaging==23.0"
+  132  python -c "import torch; import isaacsim; print(f'CUDA: {torch.cuda.is_available()} | GPU: {torch.cuda.get_device_name(0)}')"
+  133  export CUDA_VISIBLE_DEVICES=0
+  134  nvidia-smi
+  135  isaacsim
+  136  sudo apt update
+  137  sudo apt install nvidia-cuda-toolkit
+  138  pip install isaacsim[all,extscache]==5.0.0 --extra-index-url https://pypi.nvidia.com
+  139  history
+
+
+
+
+###############################################################
+Terminal 4 (rl_for_curobo repository):
+
+(mr_storm) humanoid@dt-hm10:~/dane/rl_for_curobo$ history
+    1  reboot now
+    2  sudo reboot now
+    3  history
+    4  history
+    5  history
+    6  nvidia-smi 
+    7  sudo apt update 
+    8  apt list --upgradable
+    9  sudo apt upgrade -y
+   10  whiami
+   11  whoami
+   12  sudo apt install nvidia-driver-590-open
+   13  sudo reboot now
+   14  nvidia-smi 
+   15  nvidia-detector 
+   16  nvidia-settings 
+   17  nvidia-smi 
+   18  locale
+   19  sudo apt update && sudo apt install locales
+   20  sudo locale-gen en_US en_US.UTF-8
+   21  sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+   22  export LANG=en_US.UTF-8
+   23  locale  # verify settings
+   24  sudo apt install software-properties-common
+   25  sudo add-apt-repository universe
+   26  sudo apt update && sudo apt install curl -y
+   27  export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+   28  curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+   29  sudo dpkg -i /tmp/ros2-apt-source.deb
+   30  sudo apt update && sudo apt install ros-dev-tools
+   31  sudo apt update
+   32  sudo apt upgrade
+   33  nvidia-smi
+   34  clear
+   35  watch nvidia-smi 
+   36  watch ps
+   37  watch --help
+   38  watch -n .1 ps
+   39  ros2
+   40  sudo apt install ros-jazzy-desktop
+   41  source /opt/ros/jazzy/setup.bash
+   42  ros2 run demo_nodes_cpp talker &
+   43  source /opt/ros/jazzy/setup.bash
+   44  ros2 run demo_nodes_py listener
+   45  ps aux | grep talk
+   46  kill 15855
+   47  ros2 run demo_nodes_py listener
+   48  ps aux | grep talk
+   49  kill 15859
+   50  ps aux | grep talk
+   51  ros2 run demo_nodes_py listener
+   52  ros2 topic list
+   53  ros2 topic echo /lowstate
+   54  ros2 topic hz /lowstate
+   55  apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   56  sudo apt-get install -y cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev
+   57  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   58  ls
+   59  cd unitree_sdk2/
+   60  mkdir build
+   61  cd build
+   62  cmake ..
+   63  make
+   64  sudo make install
+   65  mkdir build
+   66  cd build
+   67  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   68  sudo make install
+   69  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   70  ..
+   71  ls
+   72  cd ..
+   73  ls
+   74  ..
+   75  git clone https://github.com/unitreerobotics/unitree_sdk2.git
+   76  cd unitree_sdk2/
+   77  mkdir build
+   78  cd build/
+   79  cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+   80  sudo make install
+   81  ros2 topic list
+   82  source /opt/ros/jazzy/setup.bash 
+   83  ros2 topic list
+   84  ros2 topic echo /lowstate
+   85  cd ..
+   86  git clone https://github.com/unitreerobotics/unitree_ros2
+   87  sudo apt install ros-jazzy-rmw-cyclonedds-cpp
+   88  sudo apt install ros-jazzy-rosidl-generator-dds-idl 
+   89  sudo apt install libyaml-cpp-dev 
+   90  cd unitree_ros2/
+   91  ls
+   92  colcon build
+   93  source install/setup.bash 
+   94  ros2 topic list
+   95  ros2 topic echo /lowstate
+   96  ros2 topic echo /lowcmd
+   97  nvidia-smi
+   98  gedit
+   99  sudo apt install gedit
+  100  gedit .bashrc
+  101  pwd
+  102  conda activate mr_storm
+  103  which conda
+  104  export PATH="/home/humanoid/anaconda3/bin:$PATH"
+  105  which conda
+  106  conda activate mr_storm
+  107  /home/humanoid/anaconda3/bin/conda init bash
+  108  which conda
+  109  conda activate mr_storm
+  110  source ~/.bashrc
+  111  conda activate mr_storm
+  112  git branch
+  113  pwd
+  114  cd curobo/
+  115  pip install -e . --no-build-isolation
+  116  SETUPTOOLS_SCM_PRETEND_VERSION_FOR_NVIDIA_CUROBO=0.0.0+local pip install -e . --no-build-isolation
+  117  ls /usr/local/ | grep cuda
+  118  which nvcc
+  119  pip install -e . --no-build-isolation
+  120  python -c "import torch; from curobo.geom.sdf.world import WorldConfig; print('cuRobo imported successfully')"
+  121  python3 projects_root/real_world/mpc_g1_left_arm_only_isaacsim.py --help
+  122  python projects_root/real_world/mpc_g1_left_arm_only_isaacsim.py --help
+  123  cd ..
+  124  history
+

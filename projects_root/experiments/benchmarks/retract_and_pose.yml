@@ -9,6 +9,15 @@ franka:
     pose:
       dec:  
       - [0.5,0.5,0.0, 0.0, 0.0, 45.0] # centralized planner base pose [x,y,z,roll,pitch,yaw]
+  2:
+    n_arms: 2
+    retract:
+      - [0.0, -1.3, 0.0, -2.5, 0.0, 1.0, 0., 0.04, 0.04] # arm 1 retract
+      - [0.0, -1.3, 0.0, -2.5, 0.0, 1.0, 0., 0.04, 0.04] # arm 2 retract
+    pose:
+      dec:
+        - [0.5,0.5,0.0, 0.0, 0.0, 0.0] # arm 1 base pose [x,y,z,roll,pitch,yaw]
+        - [-0.5,0.5,0.0, 0.0, 0.0, 0.0] # arm 2 base pose [x,y,z,roll,pitch,yaw]  
   '4':
     n_arms: 4
     retract:
@@ -22,6 +31,7 @@ franka:
         - [-0.5,0.5,0.0, 0.0, 0.0, 0.0] # arm 2 base pose [x,y,z,roll,pitch,yaw]
         - [0.5,-0.5,0.0, 0.0, 0.0, 180.0] # arm 3 base pose [x,y,z,roll,pitch,yaw]
         - [-0.5,-0.5,0.0, 0.0, 0.0, 180.0] # arm 4 base pose [x,y,z,roll,pitch,yaw]
+
 
 ur10e:
   '4_05':
@@ -113,7 +123,20 @@ tinyDisk:
       - [0.0, 0.0] 
     pose:
       dec:
-        - [0.0,0.0,0.0, 0.0, 0.0, 0.0]
+        - [0.0,0.0,0.0, 0.0, 0.0, 0.0] 
+
+g1:
+  '2_arms_only':
+    n_arms: 2
+    retract:
+    - [0, 0.3, 0.0, 0.5, 0.0, 0.0,0.0] # left arm
+    - [0, -0.3, 0.0, 0.5, 0.0, 0.0,0.0] # right arm
+    pose:
+      dec:
+        - [0.0, 0.0, 0.7, 0.0, 0.0,0.0] # left arm base link (body center)
+        - [0.0, 0.0, 0.7, 0.0, 0.0,0.0] # right arm base link (body center)
+ 
+
 
 # ur5e:
 #   retract_cfg: [0.0, -2.2, 1.9, -1.383, -1.57, 0.0]

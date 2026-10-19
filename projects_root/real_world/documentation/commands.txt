@@ -1,0 +1,97 @@
+6.2.26:
+
+Full body, old g1 (july 25), moves arm fine but slowly:
+python projects_root/real_world/mpc_g1_feb26.py --visualize_spheres
+
+Left arm only, new g1 (feb 26),arm wiggling:
+python projects_root/real_world/mpc_g1_feb26.py --robot g1_feb26/left_arm.yml --visualize_spheres
+
+
+7.2.26:
+
+solved the left arm wiggling problem in new g1 (see projects_root/real_world/documentation/G1_Configuration_Guidelines.md)
+to verify run:
+
+Command:
+python projects_root/real_world/mpc_g1_feb26.py --robot g1_feb26/left_arm.yml --visualize_spheres
+
+left arm only:
+python projects_root/real_world/mpc_g1_feb26.py --robot g1_feb26/left_arm_only.yml --visualize_spheres
+
+right arm only:
+python projects_root/real_world/mpc_g1_feb26.py --robot g1_feb26/right_arm_only.yml --visualize_spheres
+
+
+
+2 arms in sim: franka for debugging:
+(env_isaac) dan@de:~/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector.py --combo_cfg /home/dan/rl_for_curobo/projects_root/real_world/combo_cfg_franka.yml
+
+
+2 arms in sim:
+THIS IS THE SATISFYING VERSION, SWITCH TO O- AND REMOVE OVERRIDE_PARTICLE_FILE FROM 
+at home:
+(env_isaac) dan@de:~/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector.py --combo_cfg /home/dan/rl_for_curobo/projects_root/real_world/combo_cfg_g1.yml
+
+at lab:
+(mr_storm)  ~/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml
+(mr_storm)  ~/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml
+
+
+
+# Feb 10
+
+Isaacsim
+
+humanoid@dt-hm10:~/dane/rl_for_curobo$ (mr_storm) python projects_root/real_world/mpc_g1_left_arm_only_isaacsim.py
+
+
+Server testing (note the differences in python environment!):
+# Launch reader and writer servers
+humanoid@dt-hm10:~/dane/rl_for_curobo$ python3 projects_root/real_world/test/reader_server.py 
+humanoid@dt-hm10:~/dane/rl_for_curobo$ python3 projects_root/real_world/test/writer_server.py 
+# Run client
+humanoid@dt-hm10:~/dane/rl_for_curobo$ (mr_storm) python projects_root/real_world/test/client.py
+
+# Feb 11
+
+# 2 arms in sim and in real robot:
+(mr_storm) humanoid@dt-hm10:~/dane/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml
+
+check if servers living:
+ps aux | grep -E "reader_server.py|writer_server.py" | grep -v grep
+
+# start reader server:
+python3 /home/humanoid/dane/rl_for_curobo/projects_root/real_world/servers/reader_server.py
+
+# start writer server:
+python3 /home/humanoid/dane/rl_for_curobo/projects_root/real_world/servers/writer_server.py
+
+ 
+# Feb 13
+# Manual, simulation
+humanoid@dt-hm10:~/dane/rl_for_curobo$ (mr_storm) python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml 
+# Manual, real robot
+humanoid@dt-hm10:~/dane/rl_for_curobo$ (mr_storm) python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml --real
+
+
+
+# Board task, simulation
+humanoid@dt-hm10:~/dane/rl_for_curobo$ (mr_storm) python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_board_g1.yml 
+# Board task, real robot
+humanoid@dt-hm10:~/dane/rl_for_curobo$ (mr_storm) python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_board_g1.yml --real
+
+
+
+# Feb 16
+current setup:
+
+# for simulation only:
+(mr_storm) humanoid@dt-hm10:~/dane/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml 
+
+# for real robot:
+# terminal 1:
+python3 projects_root/real_world/servers/writer_server.py
+# terminal 2:
+python3 projects_root/real_world/servers/reader_server.py
+# terminal 3:
+(mr_storm) humanoid@dt-hm10:~/dane/rl_for_curobo$ python projects_root/experiments/core_api/dataset_collector_both.py --combo_cfg projects_root/real_world/combo_cfg_g1.yml --real

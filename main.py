@@ -51,6 +51,7 @@ from mr_storm.backends.real_robot_backend import (
     SafetyLimits,
     SingleArmHardwareDriver,
     URRTDEHardwareDriver,
+    UnitreeG1SocketDriver,
 )
 from mr_storm.core.agnostic_layer import MRStormAgnosticLayer
 from mr_storm.core.planners import resolve_repo_path
@@ -80,7 +81,7 @@ def build_env_adapter(
             command_interface="trajectory",
             step_dt=1.0 / max(control_freq_hz, 1.0),
         )
-    elif backend == "real":
+    elif backend in ("real", "g1_real"):
         drivers: Dict[int, SingleArmHardwareDriver] = {}
         for idx, a in enumerate(layer.cu_agents):
             dof_names = list(a.planner.ordered_j_names)
@@ -91,7 +92,15 @@ def build_env_adapter(
                 .reshape(-1)
                 .astype(np.float32)
             )
-            if ur_ips and idx < len(ur_ips) and ur_ips[idx]:
+            robot_cfg_name = str(a.a_cfg.get("robot", ""))
+            is_g1_arm = backend == "g1_real" or ("g1" in robot_cfg_name.lower() and not ur_ips)
+            if is_g1_arm and a.idx in (0, 1):
+                drivers[a.idx] = UnitreeG1SocketDriver(
+                    arm_idx=a.idx,
+                    joint_names=dof_names,
+                    fallback_retract=retract,
+                )
+            elif ur_ips and idx < len(ur_ips) and ur_ips[idx]:
                 drivers[a.idx] = URRTDEHardwareDriver(
                     robot_id=a.idx,
                     robot_ip=ur_ips[idx],
@@ -105,7 +114,7 @@ def build_env_adapter(
                 def _read_fn(buf=state_buf):
                     return buf["pos"].copy(), buf["vel"].copy()
 
-                def _write_fn(pos, vel, acc, buf=state_buf):
+                def _write_fn(pos, vel, acc=None, buf=state_buf):
                     buf["vel"] = (
                         vel.copy()
                         if vel is not None
@@ -281,8 +290,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         "--backend",
         type=str,
         default="kinematic",
-        choices=["kinematic", "gazebo", "real", "isaac"],
-        help="Simulator or hardware backend ('kinematic', 'gazebo', 'real', 'isaac').",
+        choices=["kinematic", "gazebo", "real", "g1_real", "isaac"],
+        help="Simulator or hardware backend ('kinematic', 'gazebo', 'real', 'g1_real', 'isaac').",
     )
     parser.add_argument(
         "--comm",

@@ -1,0 +1,71 @@
+
+robot_cfg:
+  kinematics:
+    base_link: base_link
+    ee_link: dummy_ee_left_link
+    use_usd_kinematics: False
+
+    # File paths
+    urdf_path: "robot/g1_feb26/unitreerobotics unitree_ros master robots-g1_description/g1_left_arm_only.urdf"
+
+    # Collision configuration
+    collision_link_names:
+      - left_shoulder_pitch_link
+      - left_shoulder_roll_link
+      - left_shoulder_yaw_link
+      - left_elbow_link
+      - left_wrist_roll_link
+      - left_wrist_pitch_link
+      - left_wrist_yaw_link
+      - left_rubber_hand
+      
+    mesh_link_names:
+      - base_link
+      - left_shoulder_pitch_link
+      - left_shoulder_roll_link
+      - left_shoulder_yaw_link
+      - left_elbow_link
+      - left_wrist_roll_link
+      - left_wrist_pitch_link
+      - left_wrist_yaw_link
+      - left_rubber_hand
+      - dummy_ee_left_link
+      
+    lock_joints: {left_wrist_yaw_joint: 0.0,left_wrist_pitch_joint: 0.0}
+    
+    collision_sphere_buffer: 0.0001
+
+    self_collision_buffer:
+      left_shoulder_pitch_link: 0.0001
+      left_shoulder_roll_link: 0.0001
+      left_shoulder_yaw_link: 0.0001
+      left_elbow_link: 0.0001
+      left_rubber_hand: 0.0001
+
+    self_collision_ignore: {
+      "left_shoulder_pitch_link": ["left_shoulder_roll_link", "left_shoulder_yaw_link", "left_elbow_link"],
+      "left_shoulder_roll_link": ["left_shoulder_pitch_link", "left_shoulder_yaw_link", "left_elbow_link"],
+      "left_shoulder_yaw_link": ["left_shoulder_roll_link", "left_shoulder_pitch_link", "left_elbow_link"],
+      "left_elbow_link": ["left_shoulder_roll_link", "left_shoulder_pitch_link", "left_shoulder_yaw_link", "left_rubber_hand", "left_wrist_roll_link", "left_wrist_pitch_link", "left_wrist_yaw_link"],
+      "left_wrist_roll_link": ["left_elbow_link", "left_wrist_pitch_link", "left_wrist_yaw_link", "left_rubber_hand"],
+      "left_wrist_pitch_link": ["left_wrist_roll_link", "left_wrist_yaw_link", "left_rubber_hand", "left_elbow_link"],
+      "left_wrist_yaw_link": ["left_wrist_roll_link", "left_wrist_pitch_link", "left_rubber_hand", "left_elbow_link"],
+      "left_rubber_hand": ["left_elbow_link", "left_wrist_roll_link", "left_wrist_pitch_link", "left_wrist_yaw_link"],
+    }
+
+    collision_spheres: spheres/g1_left_arm_only.yml
+
+    cspace:
+      joint_names:
+        - left_shoulder_pitch_joint
+        - left_shoulder_roll_joint
+        - left_shoulder_yaw_joint
+        - left_elbow_joint
+        - left_wrist_roll_joint
+        - left_wrist_pitch_joint
+        - left_wrist_yaw_joint
+      retract_config: [0, 0.3, 0.0, 0.5, 0.0, 0.0,0.0]
+      null_space_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      cspace_distance_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      max_acceleration: 20.0 # Keeping user's high value, though 10.0 matches left_arm.yml
+      max_jerk: 30.0 # Keeping user's high value

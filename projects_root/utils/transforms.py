@@ -1,9 +1,8 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from typing import Optional
+from typing import Optional, Union
 
 import torch
-from warp.context import Union
 
 def transform_pose_between_frames(pose:Union[list[float],torch.Tensor], frame_expressed_in:Optional[Union[list[float],torch.Tensor]]=None, frame_express_at:Optional[Union[list[float],torch.Tensor]]=None):
     """
@@ -276,7 +275,7 @@ def transform_positions_with_precomputed_matrix(positions: torch.Tensor, rotatio
     
     return transformed.view(original_shape)
 
-def transform_poses_batched_optimized_for_spheres(poses: torch.Tensor, robot_world_pose: list) -> torch.Tensor:
+def transform_poses_batched_optimized_for_spheres(poses: torch.Tensor, robot_world_pose: Union[list, torch.Tensor]) -> torch.Tensor:
     """
     ULTRA-OPTIMIZED version specifically for robot sphere transformations.
     
@@ -288,14 +287,17 @@ def transform_poses_batched_optimized_for_spheres(poses: torch.Tensor, robot_wor
     
     Parameters:
     - poses: torch.Tensor of shape (..., 7) where last dimension is [px, py, pz, qw, qx, qy, qz]
-    - robot_world_pose: [px, py, pz, qw, qx, qy, qz] robot pose in world frame
+    - robot_world_pose: list or torch.Tensor [px, py, pz, qw, qx, qy, qz] robot pose in world frame
     
     Returns:
     - world_poses: torch.Tensor of same shape, transformed to world frame
     """
     
-    # Convert robot pose to tensor once
-    robot_pose = torch.tensor(robot_world_pose, device=poses.device, dtype=poses.dtype)
+    # Convert robot pose to tensor if needed
+    if not isinstance(robot_world_pose, torch.Tensor):
+        robot_pose = torch.tensor(robot_world_pose, device=poses.device, dtype=poses.dtype)
+    else:
+        robot_pose = robot_world_pose
     
     # Extract components
     robot_pos = robot_pose[:3]  # (3,)

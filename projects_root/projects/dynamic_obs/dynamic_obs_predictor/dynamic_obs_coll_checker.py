@@ -164,6 +164,8 @@ class DynamicObsCollPredictor:
         self.p_own_buf = torch.empty(n_rollouts, self.n_sampling_steps, self.n_valid_own, 3, device=self.tensor_args.device)
 
         self.p_own_buf_unfiltered = torch.zeros(n_rollouts, self.H, self.n_own_spheres, 3, device=self.tensor_args.device)
+        self.p_spheres_tmp_time_filtered_buf = torch.empty((n_rollouts, self.n_sampling_steps, self.n_own_spheres, 3), device=self.tensor_args.device)
+        self.p_own_filtered_buf = torch.empty((n_rollouts, self.n_sampling_steps, self.n_valid_own, 3), device=self.tensor_args.device)
         self.X_own_R = torch.zeros(n_rollouts, self.H, self.n_own_spheres, 7, device=self.tensor_args.device)
         self.X_own_R[:,:,:,3] = 1 # this is making the quat 1,0,0,0, which is the identity quaternion
 
@@ -199,6 +201,8 @@ class DynamicObsCollPredictor:
         self.rotation_matrix = None
         self.world_translation = None
         self.transform_matrix_dirty = True
+        self.wall_clock_time = 0.0
+        self.wall_clock_steps = 0
         
     def _project_sparse_to_full_horizon(self, sparse_matrix: torch.Tensor, full_matrix: torch.Tensor):
         """
@@ -299,7 +303,7 @@ class DynamicObsCollPredictor:
         """Ultra-optimized collision cost computation."""
         
         
-            
+        cost_fn_start_time = time.time()
         # Update transformation matrix if needed
         if self.transform_matrix_dirty or self.rotation_matrix is None:
             self.update_world_pose(self.X)
@@ -311,27 +315,29 @@ class DynamicObsCollPredictor:
         # Extract positions from robot frame poses
         robot_positions = prad_own_R[:, :, :, :3]  # (n_rollouts, H, n_spheres, 3)
         
-        # ULTRA-FAST transformation using pre-computed matrix
-        self.p_own_buf_unfiltered = transform_positions_with_precomputed_matrix(
-            robot_positions, self.rotation_matrix, self.world_translation
+        # filter out the timesteps and spheres that are not needed *before* transformation to save FLOPs
+        torch.index_select(robot_positions, 1, self.sampling_timesteps_tensor, out=self.p_spheres_tmp_time_filtered_buf) # Select timesteps
+        torch.index_select(self.p_spheres_tmp_time_filtered_buf, 2, self.valid_own_spheres_tensor, out=self.p_own_filtered_buf)
+        
+        # In-place ULTRA-FAST transformation directly into the pre-allocated broadcast buffer
+        p_own_filtered_flat = self.p_own_filtered_buf.view(-1, 3)
+        p_own_buf_broadcast_flat = self.p_own_buf_broadcast.view(-1, 3)
+        
+        torch.addmm(
+            self.world_translation,
+            p_own_filtered_flat, 
+            self.rotation_matrix.T,
+            out=p_own_buf_broadcast_flat
         )
-        
-        # filter out the timesteps that are not needed
-        p_spheres_tmp_time_filtered = torch.index_select(self.p_own_buf_unfiltered, 1, self.sampling_timesteps_tensor) # Select timesteps
-        # filter out the spheres that are not needed
-        self.p_own_buf = torch.index_select(p_spheres_tmp_time_filtered, 2, self.valid_own_spheres_tensor)
-        
-        # Update broadcast-ready buffer
-        self.p_own_buf_broadcast[:, :, :, 0, :] = self.p_own_buf
         
         # Fused difference computation: own_pos - obs_pos
         # Broadcasting: [n_rollouts, n_sampling_steps, n_valid_own, 1, 3] - [1, n_sampling_steps, 1, n_valid_obs, 3]
         torch.sub(self.p_own_buf_broadcast, self.p_obs_buf_broadcast, out=self.ownobs_diff_vector_buff)
         
-        self._debug['p_own'] = self.p_own_buf_broadcast.squeeze(3).cpu().numpy()
-        self._debug['r_own'] = self.rad_own_buf.cpu().numpy()
-        self._debug['p_obs'] = self.p_obs_buf_broadcast.squeeze(0).squeeze(1).cpu().numpy()
-        self._debug['r_obs'] = self.rad_obs_buf.cpu().numpy()
+        self._debug['p_own'] = self.p_own_buf_broadcast.squeeze(3)
+        self._debug['r_own'] = self.rad_own_buf
+        self._debug['p_obs'] = self.p_obs_buf_broadcast.squeeze(0).squeeze(1)
+        self._debug['r_obs'] = self.rad_obs_buf
 
         # Compute L2 norm (distance between sphere centers)
         torch.norm(self.ownobs_diff_vector_buff, dim=-1, keepdim=True, out=self.pairwise_surface_dist_buf)
@@ -350,13 +356,11 @@ class DynamicObsCollPredictor:
         if self.cost_type == 'storm_binary': # 1 where collision, 0 where not
             print(f'DEBUG: in storm_binary cost type')
             min_dist_surf2surf = torch.amin(self.pairwise_surface_dist_buf, dim=tuple(range(2, self.pairwise_surface_dist_buf.ndim)))
-            self.tmp_cost_mat_buf_sparse = torch.ones_like(min_dist_surf2surf) 
-            mask_out_of_collision = min_dist_surf2surf.lt(0.01).float() # 1 where minimal distance is less than required safety margin, 0 otherwise
-            self.tmp_cost_mat_buf_sparse.mul_(mask_out_of_collision) # set cost to 0 where collision distance >  safety margin
-            print(f'DEBUG: tmp_cost_mat_buf_sparse max: {self.tmp_cost_mat_buf_sparse.max()}, min: {self.tmp_cost_mat_buf_sparse.min()}')
+            self.tmp_cost_mat_buf_sparse.copy_(min_dist_surf2surf.lt(0.01)) 
+            # print(f'DEBUG: tmp_cost_mat_buf_sparse max: {self.tmp_cost_mat_buf_sparse.max()}, min: {self.tmp_cost_mat_buf_sparse.min()}')
             
         elif self.cost_type == 'linear':
-            print(f'DEBUG: in linear cost type')
+            # print(f'DEBUG: in linear cost type')
             if self.prior_rule == 'pose_wta' and len(self.pose_wta_conflict_resolution): # pose wta conflict resolution is used
             
                 p_own_err, q_own_err = self.pose_wta_conflict_resolution['own_errors']
@@ -373,9 +377,12 @@ class DynamicObsCollPredictor:
                     # We now set self.pairwise_surface_dist_buf to a very high distance for the subto spheres (to ignore them in collision check and prioritize ourselves on top of them)
                     
                     # Make prioritization expression (alpha) between self and other (subto) = err_ratio ** tau
-                    err_ratio = p_own_err / p_err_subto   
+                    err_ratio = p_own_err / p_err_subto
+                    # print(f'err_ratio: {err_ratio}')   
                     tau = self.wta_trust
                     alpha = err_ratio ** tau 
+                    # print(f'alpha: {alpha}')
+
                     
                     # Make masking f:
                     # now we ge the min distance to any st (subto) sphere on each rollout (dim 0) step h (dim 1)
@@ -385,9 +392,11 @@ class DynamicObsCollPredictor:
                         th = self.safety_margin # safety margin, which if distance < th we start to penalize
                         
                         d_col = min_dcol_self_subto_s2s # min distance to a sphere of subto (surface to surface distance)
-                        f = f_mask(d_col, th) # A matrix with values between 0 and 1, where 1 means collision, 0 means dist(self, subto) >= th (>= safety margin)
-                        penalty_from_subto = alpha * f # penalize self 
-                        self.tmp_cost_mat_buf_sparse += penalty_from_subto
+                        # Inline in-place f_mask: f = 1.0 + (-(1.0 / margin)) * x
+                        f = d_col.mul_(-(1.0 / th)).add_(1.0)
+                        f.relu_() # A matrix with values >= 0, where > 0 means collision/margin breach
+                        penalty_from_subto = f.mul_(alpha) # penalize self 
+                        self.tmp_cost_mat_buf_sparse.add_(penalty_from_subto)
                         
             else: # without GPDB
                 # raise ValueError("This is deprecated, should not be used")
@@ -408,7 +417,7 @@ class DynamicObsCollPredictor:
         # INTERPOLATION (OPTIONAL)-
         # IF SPARSE STEPS IS ON, INTERPOLATE
         # Interpolate the sparse costs over the horizon: (Project sparse results to full horizon, to get a valid cost matrix for the whole horizon)
-        print(f'torch.isnan(self.tmp_cost_mat_buf_sparse).any(): {torch.isnan(self.tmp_cost_mat_buf_sparse).any()}')
+        # print(f'torch.isnan(self.tmp_cost_mat_buf_sparse).any(): {torch.isnan(self.tmp_cost_mat_buf_sparse).any()}')
         
         self._project_sparse_to_full_horizon(self.tmp_cost_mat_buf_sparse, self.cost_mat_buf)
 
@@ -416,13 +425,13 @@ class DynamicObsCollPredictor:
         # WEIGHTING:
         # MULTIPLY BY CONSTANT WEIGHT OF COST TERM (HYPER PARAM) 
         self.cost_mat_buf.mul_(self.cost_weight)
-        print(f'DEBUG: cost_mat_buf max: {self.cost_mat_buf.max()}, min: {self.cost_mat_buf.min()}')
+        # print(f'DEBUG: cost_mat_buf max: {self.cost_mat_buf.max()}, min: {self.cost_mat_buf.min()}')
         if torch.isnan(self.cost_mat_buf).any():
             print(f'DEBUG: cost_mat_buf has nan values!')
             return torch.zeros_like(self.cost_mat_buf)
         # CLAMPING: 
         # set upper bound to 100,000 to avoid numerical issues        
-        self.cost_mat_buf = torch.min(self.cost_mat_buf, torch.ones_like(self.cost_mat_buf) * 100_000)
+        self.cost_mat_buf.clamp_(max=100_000)
         
         # Clear intermediate computation results to free GPU memory
         # if hasattr(torch.cuda, 'empty_cache'):
@@ -430,6 +439,12 @@ class DynamicObsCollPredictor:
         #     # Force synchronize to ensure memory is actually freed
         #     torch.cuda.synchronize()
         
+        end_cost_fn_time = time.time()
+        # print(f'DEBUG: cost_fn time: {end_cost_fn_time - start_cost_fn_time}')
+        self.wall_clock_time += end_cost_fn_time - cost_fn_start_time
+        self.wall_clock_steps += 1
+        if self.wall_clock_steps % 100 == 0:
+            print(f'DEBUG: cost_fn wall clock freq: {self.wall_clock_steps / self.wall_clock_time}')
         return self.cost_mat_buf
 
     

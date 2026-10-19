@@ -1,0 +1,8 @@
+base: [projects_root/real_world/meta_cfg_g1.yml]
+alg: [O]
+robot_fam: ['g1'] 
+robot_type: ['2_arms_only'] 
+task_seed: [0]
+task_to_levels:
+  board: [1]
+

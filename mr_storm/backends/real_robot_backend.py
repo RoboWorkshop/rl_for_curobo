@@ -123,6 +123,9 @@ class SafetySupervisor:
 class SingleArmHardwareDriver(ABC):
     """Abstract interface for a single physical robot arm SDK."""
 
+    def connect(self) -> None:
+        """Connect to the physical robot arm (optional no-op if connected in `__init__`)."""
+
     @abstractmethod
     def read_joint_state(self) -> RobotJointState:
         """Read current measured `(positions, velocities)` from the physical robot."""
@@ -130,6 +133,10 @@ class SingleArmHardwareDriver(ABC):
     @abstractmethod
     def write_joint_command(self, cmd: JointCommand) -> None:
         """Send safety-filtered `JointCommand` to the physical robot."""
+
+    def send_joint_command(self, cmd: JointCommand) -> None:
+        """Alias for `write_joint_command` used by `RealHardwareEnvAdapter`."""
+        self.write_joint_command(cmd)
 
     def stop(self) -> None:
         """Cleanly stop the physical arm."""
@@ -146,9 +153,11 @@ class CallbackHardwareDriver(SingleArmHardwareDriver):
         self,
         joint_names: List[str],
         read_fn: Callable[[], Tuple[np.ndarray, np.ndarray]],
-        write_fn: Callable[[np.ndarray, np.ndarray], None],
+        write_fn: Callable[..., None],
         stop_fn: Optional[Callable[[], None]] = None,
+        robot_id: int = 0,
     ):
+        self.robot_id = robot_id
         self.joint_names = list(joint_names)
         self._read_fn = read_fn
         self._write_fn = write_fn
@@ -164,7 +173,10 @@ class CallbackHardwareDriver(SingleArmHardwareDriver):
         )
 
     def write_joint_command(self, cmd: JointCommand) -> None:
-        self._write_fn(cmd.positions, cmd.velocities)
+        try:
+            self._write_fn(cmd.positions, cmd.velocities, cmd.accelerations)
+        except TypeError:
+            self._write_fn(cmd.positions, cmd.velocities)
 
     def stop(self) -> None:
         if self._stop_fn is not None:
@@ -182,8 +194,10 @@ class URRTDEHardwareDriver(SingleArmHardwareDriver):
         robot_ip: str,
         joint_names: Optional[List[str]] = None,
         dt: float = 0.02,
+        control_dt: Optional[float] = None,
         lookahead_time: float = 0.1,
         gain: float = 300.0,
+        robot_id: int = 0,
     ):
         try:
             import rtde_control
@@ -194,10 +208,11 @@ class URRTDEHardwareDriver(SingleArmHardwareDriver):
                 "Install via `pip install ur-rtde`."
             ) from exc
 
+        self.robot_id = robot_id
         self.robot_ip = robot_ip
         self.rtde_r = rtde_receive.RTDEReceiveInterface(robot_ip)
         self.rtde_c = rtde_control.RTDEControlInterface(robot_ip)
-        self.dt = dt
+        self.dt = control_dt if control_dt is not None else dt
         self.lookahead_time = lookahead_time
         self.gain = gain
         self.joint_names = joint_names or [
@@ -232,6 +247,78 @@ class URRTDEHardwareDriver(SingleArmHardwareDriver):
     def stop(self) -> None:
         self.rtde_c.servoStop()
         self.rtde_c.stopScript()
+
+
+class UnitreeG1SocketDriver(SingleArmHardwareDriver):
+    """
+    Real-world hardware driver for the Unitree G1 29-DoF humanoid dual-arm setup
+    (`arm_idx=0` for the 7-DoF left arm, `arm_idx=1` for the 7-DoF right arm).
+
+    Communicates with the ROS 2 Unix domain socket bridge servers in
+    `projects_root/real_world/servers/`:
+    - `reader_server.py` (`/tmp/lowstate.sock`, subscribing to `/lowstate`)
+    - `writer_server.py` (`/tmp/lowcmd.sock`, publishing `JointTrajectory` to `/arm_plan` at 200 Hz)
+    """
+
+    def __init__(
+        self,
+        arm_idx: int,
+        joint_names: Optional[List[str]] = None,
+        fallback_retract: Optional[np.ndarray] = None,
+        state_socket_path: str = "/tmp/lowstate.sock",
+        cmd_socket_path: str = "/tmp/lowcmd.sock",
+    ):
+        if arm_idx not in (0, 1):
+            raise ValueError(f"UnitreeG1SocketDriver supports arm_idx 0 (left) or 1 (right), got {arm_idx}")
+        self.arm_idx = arm_idx
+        self.state_socket_path = state_socket_path
+        self.cmd_socket_path = cmd_socket_path
+        side = "left" if arm_idx == 0 else "right"
+        self.joint_names = joint_names or [
+            f"{side}_shoulder_pitch_joint",
+            f"{side}_shoulder_roll_joint",
+            f"{side}_shoulder_yaw_joint",
+            f"{side}_elbow_joint",
+            f"{side}_wrist_roll_joint",
+            f"{side}_wrist_pitch_joint",
+            f"{side}_wrist_yaw_joint",
+        ]
+        default_retract = (
+            np.array([0.0, 0.3, 0.0, 0.5, 0.0, 0.0, 0.0], dtype=np.float32)
+            if arm_idx == 0
+            else np.array([0.0, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0], dtype=np.float32)
+        )
+        self._last_pos = (
+            np.asarray(fallback_retract, dtype=np.float32).copy()
+            if fallback_retract is not None
+            else default_retract
+        )
+        self._last_vel = np.zeros(7, dtype=np.float32)
+
+    def read_joint_state(self) -> RobotJointState:
+        from projects_root.real_world.servers.client_tools import get_joint_states
+
+        res = get_joint_states(socket_path=self.state_socket_path)
+        if res is not None:
+            pos_list, vel_list = res[self.arm_idx]
+            self._last_pos = np.asarray(pos_list, dtype=np.float32)
+            self._last_vel = np.asarray(vel_list, dtype=np.float32)
+        return RobotJointState(
+            positions=self._last_pos.copy(),
+            velocities=self._last_vel.copy(),
+            joint_names=self.joint_names,
+            timestamp=time.time(),
+        )
+
+    def write_joint_command(self, cmd: JointCommand) -> None:
+        from projects_root.real_world.servers.client_tools import send_joint_commands
+
+        send_joint_commands(
+            [float(x) for x in cmd.positions[:7]],
+            self.arm_idx,
+            socket_path=self.cmd_socket_path,
+        )
+
 
 
 class RealRobotBackend(RobotBackend):

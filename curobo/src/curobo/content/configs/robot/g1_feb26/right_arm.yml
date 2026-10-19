@@ -1,0 +1,77 @@
+
+robot_cfg:
+  kinematics:
+    base_link: waist_yaw_link
+    ee_link: dummy_ee_right_link
+    use_usd_kinematics: False
+
+    # File paths
+    urdf_path: "robot/g1_feb26/unitreerobotics unitree_ros master robots-g1_description/g1_right_arm.urdf"
+
+    # Collision configuration
+    collision_link_names:
+      - torso_link
+      - head_link
+      - right_shoulder_pitch_link
+      - right_shoulder_roll_link
+      - right_shoulder_yaw_link
+      - right_elbow_link
+      - right_wrist_roll_link
+      - right_wrist_pitch_link
+      - right_wrist_yaw_link
+      - right_rubber_hand
+      
+    mesh_link_names:
+      - waist_yaw_link
+      - torso_link
+      - head_link
+      - logo_link
+      - right_shoulder_pitch_link
+      - right_shoulder_roll_link
+      - right_shoulder_yaw_link
+      - right_elbow_link
+      - right_wrist_roll_link
+      - right_wrist_pitch_link
+      - right_wrist_yaw_link
+      - right_rubber_hand
+      - dummy_ee_right_link
+      
+    lock_joints: {}
+    
+    collision_sphere_buffer: 0.0001
+
+    self_collision_buffer:
+      torso_link: 0.0001
+      head_link: 0.0001
+      right_shoulder_pitch_link: 0.0001
+      right_shoulder_roll_link: 0.0001
+      right_shoulder_yaw_link: 0.0001
+      right_elbow_link: 0.0001
+      right_rubber_hand: 0.0001
+
+    self_collision_ignore: {
+      "right_shoulder_pitch_link": ["head_link", "right_shoulder_roll_link", "right_shoulder_yaw_link", "right_elbow_link", "torso_link"],
+      "right_shoulder_roll_link": ["head_link", "right_shoulder_pitch_link", "right_shoulder_yaw_link", "right_elbow_link", "torso_link"],
+      "right_shoulder_yaw_link": ["head_link", "torso_link", "right_shoulder_roll_link", "right_shoulder_pitch_link", "right_elbow_link"],
+      "right_elbow_link": ["torso_link", "right_shoulder_roll_link", "right_shoulder_pitch_link", "right_shoulder_yaw_link", "right_rubber_hand"],
+      "right_rubber_hand": ["right_elbow_link"],
+      "torso_link": ["head_link", "right_shoulder_pitch_link", "right_shoulder_roll_link", "right_shoulder_yaw_link", "right_elbow_link"],
+      "head_link": ["torso_link", "right_shoulder_pitch_link", "right_shoulder_roll_link", "right_shoulder_yaw_link"],
+    }
+
+    collision_spheres: spheres/g1_right_arm.yml
+
+    cspace:
+      joint_names:
+        - right_shoulder_pitch_joint
+        - right_shoulder_roll_joint
+        - right_shoulder_yaw_joint
+        - right_elbow_joint
+        - right_wrist_roll_joint
+        - right_wrist_pitch_joint
+        - right_wrist_yaw_joint
+      retract_config: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+      null_space_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      cspace_distance_weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      max_acceleration: 5.0
+      max_jerk: 20.0

@@ -1,0 +1,64 @@
+collision_spheres:
+  torso_link:
+    - center: [-0.005, 0.056, 0.151]
+      radius: 0.061
+    - center: [0.021, 0.001, 0.062]
+      radius: 0.061
+    - center: [-0.002, -0.069, 0.259]
+      radius: 0.061
+    - center: [-0.011, -0.056, 0.145]
+      radius: 0.062
+    - center: [0.004, 0.047,  0.258]
+      radius: 0.061
+  head_link:
+    - center: [-0.003, 0.004, 0.481]
+      radius: 0.04
+    - center: [-0.011, -0.003, 0.357]
+      radius: 0.04
+    - center: [0.022, -0.014, 0.477]
+      radius: 0.052
+
+  # Right Arm (Mirrored Y from Left Arm)
+  right_shoulder_pitch_link:
+    - center: [-0.004, -0.05, -0.001]
+      radius: 0.052
+  right_shoulder_roll_link:
+    - center: [0.012, -0.002, -0.069]
+      radius: 0.04
+  right_shoulder_yaw_link:
+    - center: [0.0, 0.0, -0.02]
+      radius: 0.04
+    - center: [0.0, 0.0, -0.05]
+      radius: 0.04
+    - center: [0.0, 0.0, -0.08]
+      radius: 0.04
+  
+  right_elbow_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.035
+    - center: [0.05, 0.0, 0.0]
+      radius: 0.035
+    - center: [0.08, 0.0, 0.0]
+      radius: 0.035
+      
+  right_wrist_roll_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+      
+  right_wrist_pitch_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+      
+  right_wrist_yaw_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+      
+  right_rubber_hand:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+    - center: [0.05, 0.0, 0.0]
+      radius: 0.025
+    - center: [0.05, -0.02, 0.0] # approximate finger (mirrored Y)
+      radius: 0.02
+    - center: [0.05, 0.02, 0.0] # approximate finger (mirrored Y)
+      radius: 0.02

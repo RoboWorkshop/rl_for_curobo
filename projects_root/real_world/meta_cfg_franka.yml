@@ -1,0 +1,254 @@
+timeout:
+  tstep: 5000 # 500 # world steps timeout
+  tsec: 30000 # seconds timeout
+  physics_tsec: 30000 # physics seconds (world time) timeout
+
+out:
+  # out_dir_root: '/home/evrond/mr_mpc_logs' # output directory
+  # batch_dir_name: 'TIMESTAMP' # rename to your batch name (will auto create the directory) or set '' to not put in a batch directory
+  out_dir_root: ''
+  batch_dir_name: ''
+  stats: False # save stats 
+  meta_cfg: False # save meta cfg
+  frame_cap: # frame capturing
+    is_on: False # capture and save frames to pngs
+    to_mp4_cfg:
+      is_on: False # convert frames to mp4
+      result_path: '' # result path for the mp4 video. If '', will be saved in the frames directory under the name 'simulation_video.mp4'
+      in_background: False # convert frames to mp4 in background
+      video_fps: 15 # frames per second (for video)
+    
+  
+  
+
+default: # default values to fallback to if not specified in the agent cfg. Note: you can specify agent-specific values here for each of  the default values in this file (see below).
+  # is_mobile: False
+  # mobile_base_link_subpath: ''
+  viz_color: 'orange'
+  cu_world_wrapper: # curoboworld collision wrapper
+    verbosity: 4 # 0 to 4 (0 is no output, 4 is max output) 
+    never_add: [] # paths of objects that should never be added to the collision world (for example, robot itself or the robot target)
+    never_update: ['defaultGroundPlane'] # paths of objects that are added at the beginning of the simulation and should never be updated in the collision world (normally should set here the static objects, like the ground)
+
+  
+  cumotion: # cumotion related default values (if not specified by the agent)
+    motion_gen_cfg:
+      use_cuda_graph: True 
+      self_collision_check: True
+      collision_checker_type: MESH
+      collision_cache: {"obb": 15, "mesh": 15}
+      interpolation_dt: 0.03
+      collision_activation_distance: 0.025
+      fixed_iters_trajopt: True
+      maximum_trajectory_dt: 0.5
+      ik_opt_iters: 500
+      # use_cuda_graph: True 
+      # self_collision_check: True
+      # collision_checker_type: MESH
+      # collision_cache: {"obb": 15, "mesh": 15}
+      # interpolation_dt: 0.03
+      # collision_activation_distance: 0.025
+      # fixed_iters_trajopt: True
+      # maximum_trajectory_dt: 0.5
+      # ik_opt_iters: 500 # 1000
+      # num_ik_seeds: 32 # 256 # 128 # 32
+      position_threshold: 0.05 #0.05 # 0.005
+      rotation_threshold: 100.0 # very high to disable rotation threshold (original 0.05)
+
+    motion_gen_plan_cfg:
+      enable_graph: False
+      enable_graph_attempt: 4
+      max_attempts: 10
+      time_dilation_factor: 0.5
+    
+    warmup_cfg:
+      enable_graph: True
+      warmup_js_trajopt: False
+    
+    # motion_gen_plan_cfg:
+    #   enable_graph: False
+    #   enable_graph_attempt: 4
+    #   max_attempts: 10 # 10
+    #   time_dilation_factor: 0.5
+    #   finetune_attempts: 30 # 5
+    #   enable_finetune_trajopt: False # True  # True
+    
+    # warmup_cfg:
+    #   enable_graph: True
+    #   warmup_js_trajopt: False
+    
+  
+  mpc: # mpc related default values (if not specified in the agent)
+    mpc_solver_cfg:
+      override_particle_file: projects_root/experiments/benchmarks/cfgs/particle_file_arms.yml 
+      # override_particle_file: projects_root/real_world/particle_mpc.yml
+      use_cuda_graph: False 
+      step_dt: 0.0333
+      use_cuda_graph_metrics: True
+      self_collision_check: True
+      collision_checker_type: MESH
+      collision_cache: {"obb": 15, "mesh": 15}
+      use_mppi: True
+      use_lbfgs: False
+      plot_costs: True # for debugging
+
+  
+  sim_robot_cfg: # default values for SimRobot class which is used to control the robot in simulation (if not specified by the agent)
+    visualize_col_spheres: # visualize collision spheres of the robot (for debugging)
+      is_on_world: True # visualize collision spheres in world frame
+      is_on_robot: False # visualize collision spheres in robot frame (should be around the origin with quaternion [1,0,0,0])
+      ts_delta: 3 # int
+      color: viz_color
+
+    visualize_col_pred:
+        own: False
+        own_color: 'blue'
+        own_mean_only: True
+        obs: False
+        obs_color: 'red'
+        
+        ts_delta: 1 # int
+    visualize_obj_bound_spheres: # show sphres bounding curobo obstacles (for debugging)
+      is_on: False
+      ts_delta: 2 # int
+      
+    visualize_plan: # visualize the planned trajectory of the robot (for debugging)
+      is_on: False
+      color: viz_color
+      ts_delta: 1 # int
+    
+    visualize_mpc_ee_rollouts: # visualize the end-effector rollouts of the mpc (for debugging)
+      is_on: False
+      color: 'green'
+      ts_delta: 1 # int
+
+      own_color: 'blue'
+      own_mean_only: True
+      obs: False
+      obs_color: 'red'
+      ts_delta: 1 # int
+
+
+  plan_pub_sub: # default values for publishing and subscribing to plans (if not specified by the agent)
+    pub:
+      is_on: False # meaning agent is publishing plans (so they can be used by other agents). If false, plan will be just the current state of the robot.
+      dt: 1 # agent will publish plans every pub_dt steps or seconds
+      is_dt_in_sec: False # if True, dt is in seconds, if False, pub_dt is in steps
+      pr: 1.0 # probability of publishing the plans (0.0 to 1.0) *when* dt is reached.
+    sub:
+      is_on: True # meaning agent is subscribing to plans from other robots
+      to: 'all' # meaning agent will subscribe to plans from all robots (except itself). 'to' can be a list of robot indices or 'all'. When agent is subscribed to plans, it will use the plans to plan its own steps (to make collision free steps).
+      
+  
+  # agent stats
+  stat_man_cfg:
+    dt_key_type: 'tstep' # 'tstep' or 'tsec' or 'tphysics'
+    keys: ['tsys', 'tphysics', 'w_step', 'a_step'] # added to  every stat
+    stat_names: ['env_cols', 'link_target_poses', 'arm_cols', 'total_planning_time', 'spheres']
+    collect_dt: [1,1,1,1,100] # dt for each stat
+    verbose: False # [False,False,False,False,False,True]
+    save: True
+                
+  
+async: False
+async_type: "loop" # "step" or "loop"
+
+pose_utils:
+  seed: 0 # seed to sample the obstacle poses
+
+  
+sim_task:
+  
+  task_type: manual # bin # manual # reach # 'CBSMP1' # reach/follow/manual/CBSMP_1 (for debugging)
+  level: 1 # 1: easy, 2: medium, 3: hard ...
+  # task cfgs
+  task_cfgs:
+    manual: {}
+    follow:
+      # update_interval_tphys: 0.2 # physics dt to update target
+      add_velocity_noise: True # add noise for the target velocity
+      initial_vel_direction: 'none' # 'none' for no initial velocity, 'center' for initial velocity towards the center of all robots
+      vel_noise: 0.02 # size of noise interval to add to the target velocity on each axis
+      # initial_targets_density: 0.0 # a valud between 0 and 1 where 0 means no density and 1 means full density
+    reach: 
+      targets_box_dim: 0.5
+      update_interval_tphys: 1.0
+      p_err_threh: 0.05
+      q_err_threh: 300.0
+    bin:
+      wall_dims_hwd: [0.20,0.40,0.05] # height, width, depth of the bin walls
+      p_err_threh: 0.05
+      q_err_threh: 300.0
+      # bin_pos: [0.0,0.0,0.0] # set only in one arm case (for debugging)
+
+      
+  # tasks stat managers    
+  stat_man_cfgs:
+    bin: 
+      keys: ['tsys', 'tphysics', 'w_step']
+      stat_names: ['arm_err', 'arm_picks', 'arm_drops'] # for each robot, a list with the link names that were picked/ placed at each step
+      collect_dt: 1
+      dt_key_type: 'tstep'
+      save: False
+    reach: # link and target poses will be available by agent stats (and no other stats needed)
+      # keys: ['tsys', 'tphysics', 'w_step']
+      keys: ['tsys', 'tphysics', 'w_step']
+      stat_names: ['arm_err', 'arm_changed', 'arm_reached']
+
+      collect_dt: 1
+      dt_key_type: 'tstep'
+      save: False
+      
+    follow: # link and target poses will be available by agent stats (and no other stats needed)
+      keys: ['tsys', 'tphysics', 'w_step']
+      stat_names: ['arm_err']
+      collect_dt: 1
+      dt_key_type: 'tstep'
+      save: False
+    manual: 
+      {}
+
+  
+    
+      
+sim_env:
+  cfg:
+    n_obs: 0
+    obj_shape: 'cube' # type of the obstacle ('cube' or 'sphere')
+    max_dim: 0.1 # max dimension of the obstacle (in meters): side length for cube, diameter for sphere
+    min_dim: 0.1 # min dimension of the obstacle (in meters): side length for cube, diameter for sphere
+    volume_center_pos: [0, 0,0.5] # center position of the obstacle volume (xyz in world frame)
+    volume_shape: 'sphere' # shape of the obstacle volume ('sphere' or 'box')
+    volume_dim: 0.7 # dimension of the obstacle volume (radius for sphere, side length for box)
+    obj_lin_vel: [0,0,0] # [0.2,0.2,0.2] # velocity of the obstacle (xyz in world frame)
+    obj_rigid_body_enabled: False # if True, the obstacle will be a rigid body (for physics)
+
+
+# cu_agents:  # list of agents (each agent is a robot with a planner). Note: you can specify agent-specific values here for each of  the default values in this file (see above).
+
+# - 
+#   sim_robot_cfg:
+#     visualize_col_pred:
+#       own: True # True
+#       obs: True # True
+#     visualize_mpc_ee_rollouts: # visualize the end-effector rollouts of the mpc (for debugging)
+#         is_on: True    
+
+#     visualize_col_spheres: # visualize collision spheres of the robot (for debugging)
+#       is_on_world: False # True # visualize collision spheres in world frame
+#       ts_delta: 1 # int
+ 
+# - 
+  
+#   sim_robot_cfg:
+#     visualize_col_pred:
+#       own: False # True
+#       obs: False # True
+#     visualize_col_spheres: # visualize collision spheres of the robot (for debugging)
+#       is_on_world: False # True # visualize collision spheres in world frame
+#       ts_delta: 1 # int
+
+# - mpc:
+#     {}
+# - mpc:
+     

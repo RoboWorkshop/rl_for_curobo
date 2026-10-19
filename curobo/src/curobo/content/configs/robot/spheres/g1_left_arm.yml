@@ -1,0 +1,95 @@
+collision_spheres:
+  waist_yaw_link: # Pelvis area
+    - center: [0.0, 0.0, -0.04]
+      radius: 0.08
+    - center: [0.0, 0.0, 0.0]
+      radius: 0.08
+    - center: [0.0, 0.04, -0.02] 
+      radius: 0.06
+    - center: [0.0, -0.04, -0.02]
+      radius: 0.06
+      
+  waist_roll_link: # Connection
+    - center: [0.0, 0.0, 0.0]
+      radius: 0.05
+      
+  waist_support_link: # Support
+    - center: [0.0039635, 0, -0.054]
+      radius: 0.05
+
+  torso_link:
+    # Main Chest
+    - center: [0.0, 0.0, 0.1]
+      radius: 0.1
+    - center: [0.0, 0.0, 0.2]
+      radius: 0.1
+    - center: [0.0, 0.07, 0.15]
+      radius: 0.08
+    - center: [0.0, -0.07, 0.15]
+      radius: 0.08
+    - center: [-0.02, 0.0, 0.25]
+      radius: 0.08
+    # Original sparse ones (kept for detail, but larger ones above cover bulk)
+    - center: [-0.005, 0.056, 0.151]
+      radius: 0.061
+    - center: [0.021, 0.001, 0.062]
+      radius: 0.061
+    - center: [-0.002, -0.069, 0.259]
+      radius: 0.061
+    - center: [-0.011, -0.056, 0.145]
+      radius: 0.062
+    - center: [0.004, 0.047,  0.258]
+      radius: 0.061
+
+  head_link:
+    - center: [-0.003, 0.004, 0.481]
+      radius: 0.09 # Increased slightly
+    - center: [-0.011, -0.003, 0.357]
+      radius: 0.06 # Increased slightly
+    - center: [0.022, -0.014, 0.477]
+      radius: 0.08 # Increased slightly
+
+  # Left Arm
+  left_shoulder_pitch_link:
+    - center: [-0.004, 0.05, -0.001]
+      radius: 0.052
+  left_shoulder_roll_link:
+    - center: [0.012, 0.002, -0.069]
+      radius: 0.04
+  left_shoulder_yaw_link:
+    - center: [0.0, 0.0, -0.02]
+      radius: 0.04
+    - center: [0.0, 0.0, -0.05]
+      radius: 0.04
+    - center: [0.0, 0.0, -0.08]
+      radius: 0.04
+  
+  left_elbow_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.035
+    - center: [0.05, 0.0, 0.0]
+      radius: 0.035
+    - center: [0.08, 0.0, 0.0]
+      radius: 0.035
+      
+  left_wrist_roll_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+      
+  left_wrist_pitch_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+      
+  left_wrist_yaw_link:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+      
+  left_rubber_hand:
+    - center: [0.02, 0.0, 0.0]
+      radius: 0.03
+    - center: [0.05, 0.0, 0.0]
+      radius: 0.025
+    - center: [0.05, 0.02, 0.0] # approximate finger
+      radius: 0.02
+    - center: [0.05, -0.02, 0.0] # approximate finger
+      radius: 0.02
